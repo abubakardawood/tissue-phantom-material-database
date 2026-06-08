@@ -30,16 +30,10 @@ Available at: https://phantom-organ-browser.streamlit.app
 **Deploy via Streamlit Community Cloud:**
 - Repository: this repo
 - Branch: `main`
-- App file: `app/inverse_design_app.py`
+- App file (Inverse Design): `app/inverse_design_app.py`
+- App file (Organ Browser): `app/organ_browser_app.py`
 - Requirements: `requirements.txt`
 
-## Model Selection Guidance
-
-AIC-based model selection across the database revealed a consistent pattern:
-
-- For softer phantoms below approximately 40 kPa (e.g. adipose, liver), the **Yeoh model** is recommended.
-- For stiffer phantoms above approximately 60 kPa (e.g. prostate, spleen, skeletal muscle), the **Mooney-Rivlin model** is recommended.
-- Where a single model must span the full stiffness range, Mooney-Rivlin provides consistently competitive performance.
 
 ## Citation
 
