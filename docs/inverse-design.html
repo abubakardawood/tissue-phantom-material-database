@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -374,10 +374,10 @@
       <p>Enter a target Young's modulus to receive a validated Ecoflex fabrication recipe.</p>
     </div>
     <div class="theme-toggle">
-      <button class="theme-btn active" id="btn-light" onclick="setTheme('light')">
+      <button class="theme-btn" id="btn-light" onclick="setTheme('light')">
         ☀ Light
       </button>
-      <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')">
+      <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')">
         ☾ Dark
       </button>
     </div>
@@ -407,7 +407,7 @@
     <!-- Volume + recipe -->
     <div class="panel" id="vol-panel" style="display:none">
       <div class="section-label">
-        Mould volume calculator <span class="tag">new</span>
+        Recipe Calculator <span class="tag">new</span>
       </div>
       <label for="vol-input">Mould volume (mm³)</label>
       <input type="number" id="vol-input" min="1" step="500" value="100000" placeholder="e.g. 100000">
@@ -478,8 +478,8 @@ function setTheme(t) {
     chart.update();
   }
 }
-// Detect system preference on first load
-if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+// Default is dark; only switch to light if system preference is explicitly light
+if (window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('light');
 
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const PHANTOMS = [
@@ -674,7 +674,7 @@ function renderRecipe(fam, t_pct, vol_mm3) {
       ${m_thin > 0.001 ? `<div class="recipe-row"><span class="comp">Silicone Thinner</span><span class="mass">${m_thin.toFixed(2)} g</span></div>` : ""}
       <div class="total-row"><span>Total mix mass</span><span>${total_mass.toFixed(2)} g</span></div>
     </div>
-    <p class="info-note">Pre-mix thinner with Part A before adding Part B. Masses include ×1.10 factor for fill losses.</p>
+    <p class="info-note">Pre-mix thinner with Part A before adding Part B. Masses include ×1.10 factor for fill losses. Thinner specific gravity taken as 0.94 g/cc (lower bound per Smooth-On SDS FG-271, Section 9).</p>
   `;
 }
 
