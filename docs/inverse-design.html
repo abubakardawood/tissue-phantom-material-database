@@ -115,7 +115,7 @@
   /* ── MAIN LAYOUT ── */
   .app {
     display: grid;
-    grid-template-columns: 300px 1fr;
+    grid-template-columns: 320px 1fr;
     gap: 1rem;
     padding: 1rem 1.5rem;
     flex: 1;
@@ -136,23 +136,15 @@
 
   /* ── RIGHT COLUMN ── */
   .right-col {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    gap: 0.75rem;
-    min-height: 0;
-    overflow: hidden;
-  }
-  .right-top {
     display: flex;
     flex-direction: column;
-    min-height: 0;
-  }
-  .right-bottom {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
     min-height: 0;
+    overflow-y: auto;
+    padding-right: 2px;
   }
+  .right-col::-webkit-scrollbar { width: 4px; }
+  .right-col::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
 
   /* ── PANEL ── */
   .panel {
@@ -163,10 +155,8 @@
     flex-shrink: 0;
   }
   .panel.fill {
-    flex: 1;
     display: flex;
     flex-direction: column;
-    min-height: 0;
   }
   .panel h2 {
     font-size: 11px;
@@ -278,7 +268,7 @@
   .bound-item .bi-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 3px; }
 
   /* ── CHART ── */
-  .chart-wrap { position: relative; flex: 1; min-height: 0; }
+  .chart-wrap { position: relative; height: 340px; }
   .chart-legend {
     display: flex; flex-wrap: wrap; gap: 10px;
     margin-bottom: 8px; font-size: 11px; color: var(--text-sec);
@@ -357,7 +347,6 @@
     body { overflow: auto; height: auto; }
     .app { grid-template-columns: 1fr; overflow: visible; }
     .right-col { grid-template-rows: auto auto; }
-    .right-bottom { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -414,7 +403,7 @@
 
   </div>
 
-  <!-- RIGHT: chart top, thinner note + mat ref bottom -->
+  <!-- RIGHT: chart, then cure note, then mat ref stacked -->
   <div class="right-col">
 
     <!-- Chart -->
@@ -434,27 +423,23 @@
       <p class="info-note" style="margin-top:6px">Error bars show ± 1 SD (n = 10 compression tests per phantom). Curves are PCHIP interpolants; no extrapolation is performed.</p>
     </div>
 
-    <!-- Bottom row: cure note + mat ref -->
-    <div class="right-bottom">
-
-      <!-- Cure time note -->
-      <div class="panel">
-        <h2>Thinner — effect on cure</h2>
-        <div class="cure-note">
-          <span class="icon">ⓘ</span>
-          <span>Silicone Thinner prolongs both pot life and cure time in proportion to the amount added. The values in the material reference are for the <em>base silicone with no thinner</em>. Allow additional cure time at high thinner concentrations and verify cure by touch before demoulding.</span>
-        </div>
+    <!-- Cure time note -->
+    <div class="panel">
+      <h2>Thinner — effect on cure</h2>
+      <div class="cure-note">
+        <span class="icon">ⓘ</span>
+        <span>Silicone Thinner prolongs both pot life and cure time in proportion to the amount added. The values in the material reference are for the <em>base silicone with no thinner</em>. Allow additional cure time at high thinner concentrations and verify cure by touch before demoulding.</span>
       </div>
-
-      <!-- Material reference -->
-      <div class="panel">
-        <h2>Material reference</h2>
-        <div id="mat-ref" style="font-size:12px; color: var(--text-sec);">
-          Select a family to see properties.
-        </div>
-      </div>
-
     </div>
+
+    <!-- Material reference -->
+    <div class="panel">
+      <h2>Material reference</h2>
+      <div id="mat-ref" style="font-size:12px; color: var(--text-sec);">
+        Select a family to see properties.
+      </div>
+    </div>
+
   </div>
 
 </div><!-- /app -->
@@ -544,14 +529,12 @@ function makeCurve(pts, npts=300) {
   const xs = pts.map(p=>p.t), ys = pts.map(p=>p.E);
   const ms = pchipSlopes(xs, ys);
   const tMin = xs[0], tMax = xs[xs.length-1];
-  const out = [];
-  for (let i=0; i<=npts; i++) {
+  const out = [{x:tMin, y:ys[0]}];
+  for (let i=1; i<npts; i++) {
     const t = tMin + (tMax-tMin)*i/npts;
     const v = pchipEval(xs,ys,ms,t);
     if (v !== null) out.push({x:t, y:v});
   }
-  // include endpoints
-  out.unshift({x:tMin, y:ys[0]});
   out.push({x:tMax, y:ys[ys.length-1]});
   return out;
 }
@@ -632,15 +615,18 @@ Chart.register({
       ctx2.save();
       ctx2.strokeStyle = FAM_COLOR[fam];
       ctx2.lineWidth = 1.2;
-      meta.data.forEach((el,i) => {
-        const sd = pts[i].sd;
+      meta.data.forEach((el, i) => {
+        const sd  = pts[i].sd;
         const xPx = el.x;
-        const yT = ch.scales.y.getPixelForValue(pts[i].E + sd);
-        const yB = ch.scales.y.getPixelForValue(pts[i].E - sd);
-        ctx2.beginPath(); ctx2.moveTo(xPx,yT); ctx2.lineTo(xPx,yB); ctx2.stroke();
-        [[xPx-3,yT],[xPx+3,yT],[xPx-3,yB],[xPx+3,yB]].forEach(([x1,y1],[x2,y2]) => {});
-        ctx2.beginPath(); ctx2.moveTo(xPx-3,yT); ctx2.lineTo(xPx+3,yT); ctx2.stroke();
-        ctx2.beginPath(); ctx2.moveTo(xPx-3,yB); ctx2.lineTo(xPx+3,yB); ctx2.stroke();
+        const yT  = ch.scales.y.getPixelForValue(pts[i].E + sd);
+        const yB  = ch.scales.y.getPixelForValue(pts[i].E - sd);
+        const cap = 3;
+        // vertical bar
+        ctx2.beginPath(); ctx2.moveTo(xPx, yT); ctx2.lineTo(xPx, yB); ctx2.stroke();
+        // top cap
+        ctx2.beginPath(); ctx2.moveTo(xPx - cap, yT); ctx2.lineTo(xPx + cap, yT); ctx2.stroke();
+        // bottom cap
+        ctx2.beginPath(); ctx2.moveTo(xPx - cap, yB); ctx2.lineTo(xPx + cap, yB); ctx2.stroke();
       });
       ctx2.restore();
     });
@@ -772,10 +758,16 @@ function updateVolume() {
 
 function chooseFam(fam) { chosenFam = fam; update(); }
 
+// Keep chart sized correctly if window resizes
+new ResizeObserver(() => { chart.resize(); }).observe(document.querySelector('.chart-wrap'));
+
 document.getElementById("e-target").addEventListener("input", update);
 document.getElementById("vol-input").addEventListener("input", updateVolume);
 
-update();
+// Force chart to measure its container after layout is complete
+window.addEventListener('load', () => {
+  setTimeout(() => { chart.resize(); update(); }, 50);
+});
 </script>
 </body>
 </html>
