@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -50,7 +50,7 @@
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg);
     color: var(--text);
-    font-size: 14px;
+    font-size: 15px;
     line-height: 1.55;
     display: flex;
     flex-direction: column;
@@ -74,8 +74,8 @@
     width: 100%;
     max-width: 1100px;
   }
-  .header-left h1 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
-  .header-left p  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .header-left h1 { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
+  .header-left p  { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
 
   .theme-toggle {
     display: flex; gap: 4px;
@@ -86,7 +86,7 @@
   .theme-btn {
     padding: 4px 12px; border-radius: 16px; border: none;
     background: transparent; color: var(--text-muted);
-    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    font-size: 13px; cursor: pointer; transition: all 0.15s;
   }
   .theme-btn.active {
     background: var(--surface); color: var(--text);
@@ -117,7 +117,7 @@
     flex-shrink: 0;
   }
   .left-label {
-    font-size: 10px; letter-spacing: 0.1em;
+    font-size: 11px; letter-spacing: 0.1em;
     text-transform: uppercase; color: var(--text-muted);
     margin-bottom: 1rem; align-self: flex-start;
   }
@@ -139,7 +139,7 @@
     align-items: center; justify-content: center;
     flex: 1; gap: 8px; color: var(--text-muted);
   }
-  .empty p { font-size: 12px; }
+  .empty p { font-size: 13px; }
 
   /* Panel (scrollable content area) */
   .panel-scroll {
@@ -155,12 +155,12 @@
     border-bottom: 0.5px solid var(--border-strong);
   }
   .organ-illus { width: 64px; height: 64px; flex-shrink: 0; }
-  .organ-name { font-size: 17px; font-weight: 500; }
-  .organ-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+  .organ-name { font-size: 18px; font-weight: 500; }
+  .organ-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
 
   /* ── SECTION LABEL ── */
   .sec-label {
-    font-size: 10px; letter-spacing: 0.08em;
+    font-size: 11px; letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--text-muted);
     margin-bottom: 8px;
   }
@@ -170,17 +170,17 @@
     display: flex; gap: 14px; margin-bottom: 10px;
     flex-wrap: wrap;
   }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-sec); }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-sec); }
   .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
   /* ── BAR CHART ── */
   .scale-labels {
     display: flex; justify-content: space-between;
-    font-size: 10px; color: var(--text-muted);
+    font-size: 11px; color: var(--text-muted);
     margin-bottom: 4px; font-family: monospace;
   }
   .bar-row { margin-bottom: 10px; }
-  .bar-label { font-size: 11px; color: var(--text-sec); margin-bottom: 4px; }
+  .bar-label { font-size: 12px; color: var(--text-sec); margin-bottom: 4px; }
   .bar-meta { display: grid; grid-template-columns: 1fr 80px; gap: 8px; align-items: center; }
   .bar-track {
     height: 8px; background: var(--surface3);
@@ -188,30 +188,30 @@
   }
   .bar-fill-h { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--healthy); opacity: 0.55; }
   .bar-fill-p { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--patho);   opacity: 0.55; }
-  .bar-val { font-size: 10px; color: var(--text-muted); text-align: right; font-family: monospace; }
+  .bar-val { font-size: 11px; color: var(--text-muted); text-align: right; font-family: monospace; }
   .pline {
     position: absolute; top: -5px; bottom: -5px;
     width: 2px; border-radius: 1px; cursor: pointer;
     transition: opacity 0.15s;
   }
   .pline:hover { opacity: 1 !important; }
-  .axis-note { font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 2px; margin-bottom: 6px; }
-  .bar-note { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 6px; margin-bottom: 8px; line-height: 1.5; }
+  .axis-note { font-size: 11px; color: var(--text-muted); text-align: right; margin-top: 2px; margin-bottom: 6px; }
+  .bar-note { font-size: 12px; color: var(--text-muted); font-style: italic; margin-top: 6px; margin-bottom: 8px; line-height: 1.5; }
 
   /* ── DIVIDER ── */
   .divider { height: 0.5px; background: var(--border-strong); margin: 1rem 0; }
 
   /* ── REFERENCES ── */
   .refs { margin-top: 10px; }
-  .refs-label { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
-  .ref-item { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; line-height: 1.6; }
+  .refs-label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .ref-item { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; line-height: 1.6; }
   .ref-item strong { color: var(--text-sec); font-weight: 500; }
 
   /* ── PHANTOM LEGEND ── */
   .phantom-legend { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-bottom: 10px; }
   .pl-item {
     display: flex; align-items: center; gap: 4px;
-    font-size: 10px; color: var(--text-sec);
+    font-size: 11px; color: var(--text-sec);
     cursor: pointer; padding: 2px 6px;
     border-radius: 4px; border: 0.5px solid transparent;
     font-family: monospace;
@@ -229,10 +229,10 @@
   }
   .pc:hover { background: var(--surface2); }
   .pc.sel { background: var(--accent-bg); border-color: var(--accent); }
-  .pc-label { font-size: 11px; font-weight: 500; font-family: monospace; margin-bottom: 2px; }
-  .pc-mod { font-size: 10px; color: var(--text-muted); }
+  .pc-label { font-size: 12px; font-weight: 500; font-family: monospace; margin-bottom: 2px; }
+  .pc-mod { font-size: 11px; color: var(--text-muted); }
   .pc-stripe { width: 3px; height: 12px; border-radius: 1px; display: inline-block; margin-right: 5px; vertical-align: middle; }
-  .no-match { font-size: 12px; color: var(--text-muted); grid-column: span 2; padding: 6px 0; }
+  .no-match { font-size: 13px; color: var(--text-muted); grid-column: span 2; padding: 6px 0; }
 
   /* ── RECIPE BOX ── */
   .recipe {
@@ -243,17 +243,17 @@
   }
   .recipe.vis { display: block; }
   .recipe-title {
-    font-size: 10px; letter-spacing: 0.08em;
+    font-size: 11px; letter-spacing: 0.08em;
     text-transform: uppercase; color: var(--accent-text); margin-bottom: 8px;
   }
   .rrow {
     display: flex; justify-content: space-between;
     padding: 4px 0; border-bottom: 0.5px solid var(--border);
-    font-size: 12px;
+    font-size: 13px;
   }
   .rrow:last-child { border-bottom: none; }
   .rkey { color: var(--text-sec); }
-  .rval { font-family: monospace; font-weight: 500; font-size: 11px; color: var(--text); }
+  .rval { font-family: monospace; font-weight: 500; font-size: 12px; color: var(--text); }
 
   /* ── HYPERELASTIC PANEL ── */
   .hyper-panel {
@@ -268,7 +268,7 @@
     background: var(--surface2);
     border-bottom: 0.5px solid var(--border-strong);
   }
-  .hyper-header-left { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+  .hyper-header-left { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
 
   .stress-toggle {
     display: flex; gap: 3px;
@@ -279,7 +279,7 @@
   .stress-btn {
     padding: 3px 10px; border-radius: 10px; border: none;
     background: transparent; color: var(--text-muted);
-    font-size: 10px; cursor: pointer; transition: all 0.15s;
+    font-size: 11px; cursor: pointer; transition: all 0.15s;
   }
   .stress-btn.active {
     background: var(--surface); color: var(--text);
@@ -292,15 +292,15 @@
     border-bottom: 0.5px solid var(--border);
   }
   .hyper-best-label {
-    font-size: 9px; font-weight: 500; text-transform: uppercase;
+    font-size: 10px; font-weight: 500; text-transform: uppercase;
     letter-spacing: 0.08em; color: var(--accent-text); margin-bottom: 6px;
     display: flex; align-items: center; gap: 5px;
   }
   .hyper-best-label::before {
-    content: '★'; font-size: 10px;
+    content: '★'; font-size: 11px;
   }
   .hyper-best-name {
-    font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px;
+    font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px;
   }
   .hyper-params-row {
     display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px;
@@ -309,12 +309,12 @@
     background: var(--accent-bg);
     border: 0.5px solid var(--accent);
     border-radius: 5px; padding: 3px 8px;
-    font-size: 10px; font-family: monospace; color: var(--accent-text);
+    font-size: 11px; font-family: monospace; color: var(--accent-text);
   }
   .hyper-metrics {
     display: flex; gap: 12px; margin-top: 6px;
   }
-  .hyper-metric { font-size: 10px; color: var(--text-muted); }
+  .hyper-metric { font-size: 11px; color: var(--text-muted); }
   .hyper-metric span { color: var(--text-sec); font-weight: 500; font-family: monospace; }
 
   .hyper-models-list { padding: 8px 12px 10px; }
@@ -322,18 +322,18 @@
     display: grid; grid-template-columns: 140px 1fr auto auto;
     align-items: start; gap: 8px;
     padding: 5px 0; border-bottom: 0.5px solid var(--border);
-    font-size: 11px;
+    font-size: 12px;
   }
   .hyper-model-row:last-child { border-bottom: none; }
-  .hyper-model-name { color: var(--text-sec); font-size: 11px; padding-top: 2px; }
+  .hyper-model-name { color: var(--text-sec); font-size: 12px; padding-top: 2px; }
   .hyper-model-params { display: flex; flex-wrap: wrap; gap: 3px; }
   .hyper-model-chip {
     background: var(--surface2); border: 0.5px solid var(--border-strong);
     border-radius: 4px; padding: 2px 6px;
-    font-size: 9px; font-family: monospace; color: var(--text-sec);
+    font-size: 10px; font-family: monospace; color: var(--text-sec);
   }
-  .hyper-model-s { color: var(--text-muted); font-size: 10px; font-family: monospace; white-space: nowrap; }
-  .hyper-model-aic { color: var(--text-muted); font-size: 10px; font-family: monospace; white-space: nowrap; text-align: right; }
+  .hyper-model-s { color: var(--text-muted); font-size: 11px; font-family: monospace; white-space: nowrap; }
+  .hyper-model-aic { color: var(--text-muted); font-size: 11px; font-family: monospace; white-space: nowrap; text-align: right; }
   .hyper-model-row.best .hyper-model-name { color: var(--accent-text); font-weight: 500; }
   .hyper-model-row.best .hyper-model-chip { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-text); }
   .hyper-model-row.best .hyper-model-s,
@@ -341,7 +341,7 @@
   .hyper-col-headers {
     display: grid; grid-template-columns: 140px 1fr auto auto;
     gap: 8px; padding: 4px 0 5px; border-bottom: 0.5px solid var(--border-strong);
-    font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
     margin-bottom: 2px;
   }
 </style>
@@ -355,8 +355,8 @@
       <p>Select an organ to view its literature stiffness range and matching phantom compositions.</p>
     </div>
     <div class="theme-toggle">
-      <button class="theme-btn" id="btn-light" onclick="setTheme('light')">☀ Light</button>
-      <button class="theme-btn active" id="btn-dark"  onclick="setTheme('dark')">☾ Dark</button>
+      <button class="theme-btn active" id="btn-light" onclick="setTheme('light')">☀ Light</button>
+      <button class="theme-btn" id="btn-dark"  onclick="setTheme('dark')">☾ Dark</button>
     </div>
   </div>
 </header>
@@ -497,7 +497,7 @@ function setTheme(t) {
   document.getElementById('btn-light').classList.toggle('active', t === 'light');
   document.getElementById('btn-dark').classList.toggle('active',  t === 'dark');
 }
-if (window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('light');
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
 
 // ── DATA ──────────────────────────────────────────────────────────────────────
 var SCALE_MAX = 180;
@@ -780,8 +780,8 @@ function selectOrgan(key) {
       '<div class="hyper-header">' +
         '<div class="hyper-header-left">Hyperelastic model parameters</div>' +
         '<div class="stress-toggle">' +
-          '<button class="stress-btn active" id="btn-eng" onclick="setStressType(\"engineering\")">Engineering</button>' +
-          '<button class="stress-btn" id="btn-true" onclick="setStressType(\"true\")">True</button>' +
+          '<button class="stress-btn active" id="btn-eng" data-stress="engineering">g</button>' +
+          '<button class="stress-btn" id="btn-true" data-stress="true">n>' +
         '</div>' +
       '</div>' +
       '<div class="hyper-best">' +
@@ -947,16 +947,33 @@ function renderHyperPanel(label) {
     rowsHTML;
 
   panel.classList.add('vis');
+
+  // Sync stress toggle button states (panel HTML is rebuilt each time)
+  var engBtn  = document.getElementById('btn-eng');
+  var trueBtn = document.getElementById('btn-true');
+  if (engBtn && trueBtn) {
+    engBtn.classList.toggle('active',  currentStressType === 'engineering');
+    trueBtn.classList.toggle('active', currentStressType === 'true');
+  }
 }
 
 function setStressType(t) {
   currentStressType = t;
-  document.getElementById('btn-eng').classList.toggle('active', t === 'engineering');
-  document.getElementById('btn-true').classList.toggle('active', t === 'true');
-  // Re-render for current phantom if one is selected
+  var engBtn  = document.getElementById('btn-eng');
+  var trueBtn = document.getElementById('btn-true');
+  if (engBtn)  engBtn.classList.toggle('active',  t === 'engineering');
+  if (trueBtn) trueBtn.classList.toggle('active', t === 'true');
   var sel = document.querySelector('.pc.sel');
   if (sel) renderHyperPanel(sel.getAttribute('data-phantom'));
 }
+
+// Delegated listener for stress toggle (avoids inline onclick escaping issues)
+document.addEventListener('click', function(e) {
+  if (e.target && e.target.classList.contains('stress-btn')) {
+    var t = e.target.getAttribute('data-stress');
+    if (t) setStressType(t);
+  }
+});
 
 function selectPhantom(label) {
   document.querySelectorAll('.pc').forEach(function(el) { el.classList.remove('sel'); });
