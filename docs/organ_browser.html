@@ -1,1 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organ Browser — Phantom Material Database</title>
+<style>
+  /* ── TOKENS ── */
+  :root {
+    --bg: #f4f3f0;
+    --surface: #ffffff;
+    --surface2: #eeede9;
+    --surface3: #e5e4e0;
+    --border: rgba(0,0,0,0.09);
+    --border-strong: rgba(0,0,0,0.16);
+    --text: #0b0b0b;
+    --text-sec: #52514e;
+    --text-muted: #898781;
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --accent-text: #0c447c;
+    --radius: 8px;
+    --healthy: #16a34a;
+    --healthy-bg: rgba(22,163,74,0.12);
+    --patho: #dc2626;
+    --patho-bg: rgba(220,38,38,0.12);
+  }
+  [data-theme="dark"] {
+    --bg: #111110;
+    --surface: #1e1e1c;
+    --surface2: #2a2a28;
+    --surface3: #333330;
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #f5f4f0;
+    --text-sec: #c3c2b7;
+    --text-muted: #7a7975;
+    --accent: #3987e5;
+    --accent-bg: #042c53;
+    --accent-text: #85b7eb;
+    --healthy: #4ade80;
+    --healthy-bg: rgba(74,222,128,0.12);
+    --patho: #f87171;
+    --patho-bg: rgba(248,113,113,0.12);
+  }
 
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.55;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border-strong);
+    padding: 0.7rem 1.5rem;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1100px;
+  }
+  .header-left h1 { font-size: 15px; font-weight: 500; letter-spacing: -0.01em; }
+  .header-left p  { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  .theme-toggle {
+    display: flex; gap: 4px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 20px; padding: 3px;
+  }
+  .theme-btn {
+    padding: 4px 12px; border-radius: 16px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+  }
+  .theme-btn.active {
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  /* ── APP OUTER ── */
+  .app-outer {
+    flex: 1; overflow: hidden;
+    display: flex; justify-content: center;
+    min-height: 0;
+  }
+  .app {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    width: 100%; max-width: 1100px;
+    min-height: 0; overflow: hidden;
+  }
+
+  /* ── LEFT: body diagram ── */
+  .left-col {
+    background: var(--surface);
+    border-right: 0.5px solid var(--border-strong);
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 1rem 0.75rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+  }
+  .left-label {
+    font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 1rem; align-self: flex-start;
+  }
+  .body-svg { width: 180px; }
+  .organ-btn { cursor: pointer; }
+  .organ-btn .hit { opacity: 0; transition: opacity 0.15s; }
+  .organ-btn:hover .hit { opacity: 0.25; }
+  .organ-btn.active .hit { opacity: 0.4; }
+
+  /* ── RIGHT: content ── */
+  .right-col {
+    display: flex; flex-direction: column;
+    overflow: hidden; min-height: 0;
+  }
+
+  /* Empty state */
+  .empty {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    flex: 1; gap: 8px; color: var(--text-muted);
+  }
+  .empty p { font-size: 12px; }
+
+  /* Panel (scrollable content area) */
+  .panel-scroll {
+    flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem;
+  }
+  .panel-scroll::-webkit-scrollbar { width: 4px; }
+  .panel-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  /* ── ORGAN HEADER ── */
+  .organ-header {
+    display: flex; align-items: center; gap: 14px;
+    margin-bottom: 1.25rem; padding-bottom: 1rem;
+    border-bottom: 0.5px solid var(--border-strong);
+  }
+  .organ-illus { width: 64px; height: 64px; flex-shrink: 0; }
+  .organ-name { font-size: 17px; font-weight: 500; }
+  .organ-sub { font-size: 11px; color: var(--text-muted); margin-top: 3px; line-height: 1.5; }
+
+  /* ── SECTION LABEL ── */
+  .sec-label {
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; gap: 14px; margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text-sec); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+  /* ── BAR CHART ── */
+  .scale-labels {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: var(--text-muted);
+    margin-bottom: 4px; font-family: monospace;
+  }
+  .bar-row { margin-bottom: 10px; }
+  .bar-label { font-size: 11px; color: var(--text-sec); margin-bottom: 4px; }
+  .bar-meta { display: grid; grid-template-columns: 1fr 80px; gap: 8px; align-items: center; }
+  .bar-track {
+    height: 8px; background: var(--surface3);
+    border-radius: 4px; position: relative; overflow: visible;
+  }
+  .bar-fill-h { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--healthy); opacity: 0.55; }
+  .bar-fill-p { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--patho);   opacity: 0.55; }
+  .bar-val { font-size: 10px; color: var(--text-muted); text-align: right; font-family: monospace; }
+  .pline {
+    position: absolute; top: -5px; bottom: -5px;
+    width: 2px; border-radius: 1px; cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .pline:hover { opacity: 1 !important; }
+  .axis-note { font-size: 10px; color: var(--text-muted); text-align: right; margin-top: 2px; margin-bottom: 6px; }
+  .bar-note { font-size: 11px; color: var(--text-muted); font-style: italic; margin-top: 6px; margin-bottom: 8px; line-height: 1.5; }
+
+  /* ── DIVIDER ── */
+  .divider { height: 0.5px; background: var(--border-strong); margin: 1rem 0; }
+
+  /* ── REFERENCES ── */
+  .refs { margin-top: 10px; }
+  .refs-label { font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .ref-item { font-size: 10px; color: var(--text-muted); margin-bottom: 6px; line-height: 1.6; }
+  .ref-item strong { color: var(--text-sec); font-weight: 500; }
+
+  /* ── PHANTOM LEGEND ── */
+  .phantom-legend { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-bottom: 10px; }
+  .pl-item {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 10px; color: var(--text-sec);
+    cursor: pointer; padding: 2px 6px;
+    border-radius: 4px; border: 0.5px solid transparent;
+    font-family: monospace;
+  }
+  .pl-item:hover { background: var(--surface2); border-color: var(--border-strong); }
+  .pl-item.sel { background: var(--accent-bg); border-color: var(--accent); }
+  .pl-swatch { width: 3px; height: 12px; border-radius: 1px; flex-shrink: 0; }
+
+  /* ── PHANTOM GRID ── */
+  .phantom-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+  .pc {
+    border: 0.5px solid var(--border-strong); border-radius: 8px;
+    padding: 9px 11px; cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .pc:hover { background: var(--surface2); }
+  .pc.sel { background: var(--accent-bg); border-color: var(--accent); }
+  .pc-label { font-size: 11px; font-weight: 500; font-family: monospace; margin-bottom: 2px; }
+  .pc-mod { font-size: 10px; color: var(--text-muted); }
+  .pc-stripe { width: 3px; height: 12px; border-radius: 1px; display: inline-block; margin-right: 5px; vertical-align: middle; }
+  .no-match { font-size: 12px; color: var(--text-muted); grid-column: span 2; padding: 6px 0; }
+
+  /* ── RECIPE BOX ── */
+  .recipe {
+    border: 0.5px solid var(--accent);
+    border-radius: 8px; padding: 12px 14px;
+    background: var(--accent-bg); margin-top: 10px;
+    display: none;
+  }
+  .recipe.vis { display: block; }
+  .recipe-title {
+    font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--accent-text); margin-bottom: 8px;
+  }
+  .rrow {
+    display: flex; justify-content: space-between;
+    padding: 4px 0; border-bottom: 0.5px solid var(--border);
+    font-size: 12px;
+  }
+  .rrow:last-child { border-bottom: none; }
+  .rkey { color: var(--text-sec); }
+  .rval { font-family: monospace; font-weight: 500; font-size: 11px; color: var(--text); }
+
+  /* ── HYPERELASTIC PANEL ── */
+  .hyper-panel {
+    margin-top: 10px; border: 0.5px solid var(--border-strong);
+    border-radius: 8px; overflow: hidden; display: none;
+  }
+  .hyper-panel.vis { display: block; }
+
+  .hyper-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border-bottom: 0.5px solid var(--border-strong);
+  }
+  .hyper-header-left { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-muted); }
+
+  .stress-toggle {
+    display: flex; gap: 3px;
+    background: var(--surface3);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 12px; padding: 2px;
+  }
+  .stress-btn {
+    padding: 3px 10px; border-radius: 10px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 10px; cursor: pointer; transition: all 0.15s;
+  }
+  .stress-btn.active {
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+
+  .hyper-best {
+    padding: 10px 12px;
+    background: linear-gradient(135deg, rgba(57,135,229,0.08), rgba(57,135,229,0.04));
+    border-bottom: 0.5px solid var(--border);
+  }
+  .hyper-best-label {
+    font-size: 9px; font-weight: 500; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--accent-text); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .hyper-best-label::before {
+    content: '★'; font-size: 10px;
+  }
+  .hyper-best-name {
+    font-size: 13px; font-weight: 500; color: var(--text); margin-bottom: 6px;
+  }
+  .hyper-params-row {
+    display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 5px;
+  }
+  .hyper-param-chip {
+    background: var(--accent-bg);
+    border: 0.5px solid var(--accent);
+    border-radius: 5px; padding: 3px 8px;
+    font-size: 10px; font-family: monospace; color: var(--accent-text);
+  }
+  .hyper-metrics {
+    display: flex; gap: 12px; margin-top: 6px;
+  }
+  .hyper-metric { font-size: 10px; color: var(--text-muted); }
+  .hyper-metric span { color: var(--text-sec); font-weight: 500; font-family: monospace; }
+
+  .hyper-models-list { padding: 8px 12px 10px; }
+  .hyper-model-row {
+    display: grid; grid-template-columns: 140px 1fr auto auto;
+    align-items: start; gap: 8px;
+    padding: 5px 0; border-bottom: 0.5px solid var(--border);
+    font-size: 11px;
+  }
+  .hyper-model-row:last-child { border-bottom: none; }
+  .hyper-model-name { color: var(--text-sec); font-size: 11px; padding-top: 2px; }
+  .hyper-model-params { display: flex; flex-wrap: wrap; gap: 3px; }
+  .hyper-model-chip {
+    background: var(--surface2); border: 0.5px solid var(--border-strong);
+    border-radius: 4px; padding: 2px 6px;
+    font-size: 9px; font-family: monospace; color: var(--text-sec);
+  }
+  .hyper-model-s { color: var(--text-muted); font-size: 10px; font-family: monospace; white-space: nowrap; }
+  .hyper-model-aic { color: var(--text-muted); font-size: 10px; font-family: monospace; white-space: nowrap; text-align: right; }
+  .hyper-model-row.best .hyper-model-name { color: var(--accent-text); font-weight: 500; }
+  .hyper-model-row.best .hyper-model-chip { background: var(--accent-bg); border-color: var(--accent); color: var(--accent-text); }
+  .hyper-model-row.best .hyper-model-s,
+  .hyper-model-row.best .hyper-model-aic { color: var(--accent-text); }
+  .hyper-col-headers {
+    display: grid; grid-template-columns: 140px 1fr auto auto;
+    gap: 8px; padding: 4px 0 5px; border-bottom: 0.5px solid var(--border-strong);
+    font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="header-left">
+      <h1>Organ Browser — Phantom Material Database</h1>
+      <p>Select an organ to view its literature stiffness range and matching phantom compositions.</p>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-btn" id="btn-light" onclick="setTheme('light')">☀ Light</button>
+      <button class="theme-btn active" id="btn-dark"  onclick="setTheme('dark')">☾ Dark</button>
+    </div>
+  </div>
+</header>
+
+<div class="app-outer">
+  <div class="app">
+
+    <!-- LEFT: body diagram -->
+    <div class="left-col">
+      <div class="left-label">Select an organ</div>
+      <svg class="body-svg" viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg">
+        <!-- Body outline -->
+        <ellipse cx="100" cy="38" rx="30" ry="34" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <rect x="88" y="68" width="24" height="16" rx="4" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <path d="M52 84 Q42 92 40 120 L36 268 Q36 278 48 280 L152 280 Q164 278 164 268 L160 120 Q158 92 148 84 Z" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <path d="M52 90 Q36 98 30 136 L22 228 Q20 240 28 242 L44 242 Q52 240 50 228 L54 136 Z" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <path d="M148 90 Q164 98 170 136 L178 228 Q180 240 172 242 L156 242 Q148 240 150 228 L146 136 Z" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <path d="M48 280 L44 366 Q42 382 50 384 L78 384 Q86 382 86 366 L88 280 Z" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <path d="M152 280 L156 366 Q158 382 150 384 L122 384 Q114 382 114 366 L112 280 Z" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <ellipse cx="64"  cy="390" rx="14" ry="8" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+        <ellipse cx="136" cy="390" rx="14" ry="8" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
+
+        <!-- Brain -->
+        <g class="organ-btn" id="btn-brain" data-organ="brain">
+          <rect class="hit" x="78" y="8" width="44" height="44" rx="6" fill="#9FE1CB"/>
+          <path d="M82 40 Q80 26 88 18 Q96 12 106 14 Q118 16 120 28 Q122 40 114 48 Q106 54 96 52 Q86 50 82 40Z" fill="#9FE1CB" stroke="#1D9E75" stroke-width="0.8"/>
+          <path d="M86 32 Q92 26 100 28" fill="none" stroke="#0F6E56" stroke-width="0.6"/>
+          <path d="M88 40 Q96 36 104 40" fill="none" stroke="#0F6E56" stroke-width="0.6"/>
+          <text x="100" y="66" text-anchor="middle" font-size="7" fill="var(--text-muted)">Brain</text>
+        </g>
+
+        <!-- Lungs -->
+        <g class="organ-btn" id="btn-lung" data-organ="lung">
+          <rect class="hit" x="56" y="130" width="28" height="44" rx="5" fill="#A8D4E8"/>
+          <path d="M60 134 Q58 134 58 148 Q58 166 63 171 Q68 175 76 173 Q82 170 82 158 Q82 146 79 139 Q76 132 68 132 Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="0.8"/>
+          <rect class="hit" x="136" y="130" width="28" height="44" rx="5" fill="#A8D4E8"/>
+          <path d="M140 132 Q132 132 129 139 Q126 146 126 158 Q126 170 132 173 Q140 175 145 171 Q150 166 150 148 Q150 134 148 134 Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="0.8"/>
+          <text x="100" y="184" text-anchor="middle" font-size="7" fill="var(--text-muted)">Lungs</text>
+        </g>
+
+        <!-- Breast -->
+        <g class="organ-btn" id="btn-breast" data-organ="breast">
+          <rect class="hit" x="52" y="110" width="30" height="26" rx="5" fill="#F9C8D8"/>
+          <ellipse cx="67" cy="123" rx="13" ry="10" fill="#F9C8D8" stroke="#D4537E" stroke-width="0.8"/>
+          <circle cx="67" cy="125" r="2.5" fill="#D4537E" opacity="0.7"/>
+          <rect class="hit" x="118" y="110" width="30" height="26" rx="5" fill="#F9C8D8"/>
+          <ellipse cx="133" cy="123" rx="13" ry="10" fill="#F9C8D8" stroke="#D4537E" stroke-width="0.8"/>
+          <circle cx="133" cy="125" r="2.5" fill="#D4537E" opacity="0.7"/>
+          <text x="100" y="144" text-anchor="middle" font-size="7" fill="var(--text-muted)">Breast</text>
+        </g>
+
+        <!-- Heart -->
+        <g class="organ-btn" id="btn-heart" data-organ="heart">
+          <rect class="hit" x="81" y="99" width="38" height="38" rx="6" fill="#F4C0D1"/>
+          <path d="M100 133 Q87 123 87 113 Q87 105 93 104 Q98 102 100 107 Q102 102 108 104 Q114 105 114 113 Q114 123 100 133Z" fill="#F4C0D1" stroke="#D4537E" stroke-width="0.8"/>
+          <text x="100" y="145" text-anchor="middle" font-size="7" fill="var(--text-muted)">Heart</text>
+        </g>
+
+        <!-- Liver -->
+        <g class="organ-btn" id="btn-liver" data-organ="liver">
+          <rect class="hit" x="48" y="159" width="56" height="30" rx="6" fill="#B5D4F4"/>
+          <path d="M52 185 Q52 169 66 167 Q78 165 86 170 Q94 173 98 168 Q106 165 102 179 Q100 189 84 191 Q70 193 60 187Z" fill="#B5D4F4" stroke="#378ADD" stroke-width="0.8"/>
+          <text x="72" y="199" text-anchor="middle" font-size="7" fill="var(--text-muted)">Liver</text>
+        </g>
+
+        <!-- Stomach -->
+        <g class="organ-btn" id="btn-stomach" data-organ="stomach">
+          <rect class="hit" x="114" y="162" width="34" height="34" rx="6" fill="#FAC775"/>
+          <path d="M122 166 Q116 166 116 178 Q116 190 124 192 Q134 194 138 186 Q140 180 138 173 Q136 165 130 165Z" fill="#FAC775" stroke="#BA7517" stroke-width="0.8"/>
+          <text x="134" y="202" text-anchor="middle" font-size="7" fill="var(--text-muted)">Stomach</text>
+        </g>
+
+        <!-- Pancreas -->
+        <g class="organ-btn" id="btn-pancreas" data-organ="pancreas">
+          <rect class="hit" x="60" y="196" width="48" height="22" rx="5" fill="#E8C4F5"/>
+          <path d="M64 200 Q62 200 62 208 Q62 214 68 216 Q80 218 94 214 Q102 212 104 208 Q104 202 98 200 Q86 198 74 200 Z" fill="#E8C4F5" stroke="#A855C8" stroke-width="0.8"/>
+          <text x="83" y="226" text-anchor="middle" font-size="7" fill="var(--text-muted)">Pancreas</text>
+        </g>
+
+        <!-- Kidney -->
+        <g class="organ-btn" id="btn-kidney" data-organ="kidney">
+          <rect class="hit" x="56" y="200" width="26" height="34" rx="6" fill="#CECBF6"/>
+          <rect class="hit" x="118" y="200" width="26" height="34" rx="6" fill="#CECBF6"/>
+          <path d="M61 205 Q57 205 57 217 Q57 229 61 229 Q69 229 75 223 Q79 217 75 211 Q71 205 61 205Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="0.7"/>
+          <path d="M123 205 Q119 205 119 217 Q119 229 123 229 Q131 229 137 223 Q141 217 137 211 Q133 205 123 205Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="0.7"/>
+          <text x="100" y="242" text-anchor="middle" font-size="7" fill="var(--text-muted)">Kidney</text>
+        </g>
+
+        <!-- Prostate -->
+        <g class="organ-btn" id="btn-prostate" data-organ="prostate">
+          <rect class="hit" x="84" y="244" width="32" height="24" rx="6" fill="#F4C0D1"/>
+          <ellipse cx="100" cy="256" rx="13" ry="10" fill="#F4C0D1" stroke="#D4537E" stroke-width="0.8"/>
+          <ellipse cx="100" cy="256" rx="4" ry="6" fill="#FBEAF0" stroke="#D4537E" stroke-width="0.5"/>
+          <text x="100" y="276" text-anchor="middle" font-size="7" fill="var(--text-muted)">Prostate</text>
+        </g>
+
+        <!-- Muscle -->
+        <g class="organ-btn" id="btn-muscle" data-organ="muscle">
+          <rect class="hit" x="20" y="156" width="24" height="44" rx="6" fill="#C0DD97"/>
+          <ellipse cx="32" cy="178" rx="9" ry="18" fill="#C0DD97" stroke="#639922" stroke-width="0.8"/>
+          <line x1="28" y1="165" x2="28" y2="190" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
+          <line x1="32" y1="162" x2="32" y2="193" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
+          <line x1="36" y1="165" x2="36" y2="190" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
+          <text x="32" y="204" text-anchor="middle" font-size="7" fill="var(--text-muted)">Muscle</text>
+        </g>
+
+        <!-- Adipose -->
+        <g class="organ-btn" id="btn-adipose" data-organ="adipose">
+          <rect class="hit" x="138" y="192" width="28" height="36" rx="6" fill="#F5C4B3"/>
+          <circle cx="152" cy="204" r="7" fill="#F5C4B3" stroke="#F0997B" stroke-width="0.6"/>
+          <circle cx="147" cy="216" r="6" fill="#F5C4B3" stroke="#F0997B" stroke-width="0.6"/>
+          <circle cx="158" cy="217" r="5" fill="#FAECE7" stroke="#F0997B" stroke-width="0.6"/>
+          <text x="152" y="236" text-anchor="middle" font-size="7" fill="var(--text-muted)">Fat</text>
+        </g>
+      </svg>
+    </div>
+
+    <!-- RIGHT: content -->
+    <div class="right-col">
+      <div class="empty" id="empty">
+        <svg width="40" height="40" viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="19" fill="none" stroke="var(--border-strong)" stroke-width="1"/>
+          <path d="M12 20 L18 26 L28 14" fill="none" stroke="var(--border-strong)" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <p>Click an organ to explore tissue stiffness data</p>
+        <p style="font-size:11px">and matching phantom compositions</p>
+      </div>
+      <div class="panel-scroll" id="panel" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ── THEME ─────────────────────────────────────────────────────────────────────
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  document.getElementById('btn-dark').classList.toggle('active',  t === 'dark');
+}
+if (window.matchMedia('(prefers-color-scheme: light)').matches) setTheme('light');
+
+// ── DATA ──────────────────────────────────────────────────────────────────────
+var SCALE_MAX = 180;
+function linPos(val) { return (Math.min(val, SCALE_MAX) / SCALE_MAX * 100).toFixed(1); }
+
+var PHANTOM_COLORS = [
+  '#6366f1','#f59e0b','#10b981','#ef4444','#3b82f6',
+  '#ec4899','#14b8a6','#f97316','#8b5cf6','#84cc16',
+  '#06b6d4','#e11d48','#a16207','#0284c7','#15803d',
+  '#7c3aed','#b45309','#0f766e','#be123c'
+];
+
+var PHANTOMS = [
+  { label:'EF10_100T',  material:'Ecoflex 00-10', thinner:'100%',  modulus:6.19,   sd:0.77 },
+  { label:'EF10_87.5T', material:'Ecoflex 00-10', thinner:'87.5%', modulus:8.68,   sd:0.26 },
+  { label:'EF10_75T',   material:'Ecoflex 00-10', thinner:'75%',   modulus:9.58,   sd:0.12 },
+  { label:'EF10_62.5T', material:'Ecoflex 00-10', thinner:'62.5%', modulus:12.94,  sd:0.52 },
+  { label:'EF10_50T',   material:'Ecoflex 00-10', thinner:'50%',   modulus:16.29,  sd:0.40 },
+  { label:'EF10_37.5T', material:'Ecoflex 00-10', thinner:'37.5%', modulus:20.14,  sd:0.83 },
+  { label:'EF10_25T',   material:'Ecoflex 00-10', thinner:'25%',   modulus:28.16,  sd:0.79 },
+  { label:'EF10_12.5T', material:'Ecoflex 00-10', thinner:'12.5%', modulus:38.06,  sd:1.28 },
+  { label:'EF10_0T',    material:'Ecoflex 00-10', thinner:'0%',    modulus:56.27,  sd:2.12 },
+  { label:'EF30_50T',   material:'Ecoflex 00-30', thinner:'50%',   modulus:31.85,  sd:0.62 },
+  { label:'EF30_37.5T', material:'Ecoflex 00-30', thinner:'37.5%', modulus:37.16,  sd:0.72 },
+  { label:'EF30_25T',   material:'Ecoflex 00-30', thinner:'25%',   modulus:50.21,  sd:1.50 },
+  { label:'EF30_12.5T', material:'Ecoflex 00-30', thinner:'12.5%', modulus:72.58,  sd:2.64 },
+  { label:'EF30_0T',    material:'Ecoflex 00-30', thinner:'0%',    modulus:103.46, sd:2.32 },
+  { label:'EF50_50T',   material:'Ecoflex 00-50', thinner:'50%',   modulus:59.25,  sd:1.88 },
+  { label:'EF50_37.5T', material:'Ecoflex 00-50', thinner:'37.5%', modulus:72.76,  sd:3.07 },
+  { label:'EF50_25T',   material:'Ecoflex 00-50', thinner:'25%',   modulus:86.80,  sd:3.93 },
+  { label:'EF50_12.5T', material:'Ecoflex 00-50', thinner:'12.5%', modulus:111.86, sd:6.44 },
+  { label:'EF50_0T',    material:'Ecoflex 00-50', thinner:'0%',    modulus:158.80, sd:3.01 }
+];
+
+var ILLUS = {
+  breast:   '<ellipse cx="30" cy="60" rx="26" ry="22" fill="#F9C8D8" stroke="#D4537E" stroke-width="1.2"/><ellipse cx="70" cy="60" rx="26" ry="22" fill="#F9C8D8" stroke="#D4537E" stroke-width="1.2"/><circle cx="30" cy="62" r="4" fill="#D4537E" opacity="0.6"/><circle cx="70" cy="62" r="4" fill="#D4537E" opacity="0.6"/>',
+  lung:     '<path d="M10 55 Q10 25 22 14 Q34 4 46 8 Q56 12 60 26 Q64 40 58 56 Q52 70 38 74 Q22 76 10 55Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="1.2"/><path d="M90 55 Q90 25 78 14 Q66 4 54 8 Q44 12 40 26 Q36 40 42 56 Q48 70 62 74 Q78 76 90 55Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="1.2"/>',
+  brain:    '<path d="M16 52 Q14 28 28 14 Q42 2 58 6 Q74 10 80 26 Q86 42 78 58 Q70 72 54 78 Q38 82 26 72 Q16 64 16 52Z" fill="#9FE1CB" stroke="#1D9E75" stroke-width="1.2"/><path d="M48 6 Q48 52 48 78" fill="none" stroke="#0F6E56" stroke-width="0.8"/><path d="M22 30 Q34 22 48 26 Q62 22 74 30" fill="none" stroke="#0F6E56" stroke-width="0.9"/>',
+  heart:    '<path d="M50 82 Q20 60 20 36 Q20 18 34 16 Q44 14 50 26 Q56 14 66 16 Q80 18 80 36 Q80 60 50 82Z" fill="#F4C0D1" stroke="#D4537E" stroke-width="1.2"/>',
+  liver:    '<path d="M14 55 Q14 24 34 18 Q50 12 62 18 Q76 24 80 36 Q84 48 76 58 Q66 68 44 70 Q24 72 14 55Z" fill="#B5D4F4" stroke="#378ADD" stroke-width="1.2"/>',
+  stomach:  '<path d="M30 18 Q18 18 16 34 Q14 52 20 64 Q28 76 42 76 Q56 74 60 60 Q64 46 58 30 Q52 16 42 18Z" fill="#FAC775" stroke="#BA7517" stroke-width="1.2"/>',
+  pancreas: '<path d="M8 52 Q8 44 18 40 Q32 36 50 38 Q68 36 80 42 Q90 48 88 56 Q86 64 72 66 Q54 68 34 64 Q14 60 8 52Z" fill="#E8C4F5" stroke="#A855C8" stroke-width="1.2"/>',
+  kidney:   '<path d="M24 10 Q10 10 10 50 Q10 88 24 88 Q42 88 56 70 Q66 54 56 32 Q44 10 24 10Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="1.2"/><ellipse cx="30" cy="50" rx="8" ry="16" fill="#EEEDFE" stroke="#7F77DD" stroke-width="0.8"/>',
+  prostate: '<ellipse cx="50" cy="50" rx="38" ry="32" fill="#F4C0D1" stroke="#D4537E" stroke-width="1.2"/><ellipse cx="50" cy="50" rx="14" ry="20" fill="#FBEAF0" stroke="#D4537E" stroke-width="0.8"/>',
+  muscle:   '<ellipse cx="50" cy="50" rx="28" ry="44" fill="#C0DD97" stroke="#639922" stroke-width="1.2"/><line x1="36" y1="16" x2="36" y2="84" stroke="#3B6D11" stroke-width="0.8" opacity="0.8"/><line x1="50" y1="8" x2="50" y2="92" stroke="#3B6D11" stroke-width="0.8" opacity="0.8"/><line x1="64" y1="16" x2="64" y2="84" stroke="#3B6D11" stroke-width="0.8" opacity="0.8"/>',
+  adipose:  '<circle cx="42" cy="38" r="20" fill="#F5C4B3" stroke="#F0997B" stroke-width="1"/><circle cx="64" cy="32" r="16" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/><circle cx="38" cy="64" r="18" fill="#F5C4B3" stroke="#F0997B" stroke-width="1"/><circle cx="64" cy="60" r="14" fill="#FAECE7" stroke="#F0997B" stroke-width="1"/>'
+};
+
+var ORGANS = {
+  breast: {
+    name:'Breast', sub:'Parenchymal tissue and masses — MRE and shear-wave elastography, in vivo',
+    eMin:1, eMax:160,
+    rows:[
+      { k:'Normal parenchyma (fatty to fibroglandular) — MRE', v:'1.3 – 3.8 kPa', type:'h', rMin:1.3, rMax:3.8 },
+      { k:'Benign masses (fibroadenoma, fibrosis, fibrocystic) — SWE', v:'22 – 102 kPa', type:'h', rMin:22, rMax:102 },
+      { k:'Malignant masses (DCIS to invasive carcinoma) — SWE', v:'71 – 180 kPa', type:'p', rMin:71, rMax:180 }
+    ],
+    note:'Normal parenchyma (1.3–3.8 kPa) from 3T MRE: fatty 1.3–2.4 kPa, fibroglandular 2.2–3.8 kPa. Benign and malignant values are Emax from SWE of 1562 masses. Note the overlap between benign and malignant ranges (71–102 kPa), consistent with clinical observations.',
+    refs:[
+      { authors:'Karakas L & Pocan S.', title:'Correlation between breast parenchymal stiffness measured by 3T MRE and CT-derived Hounsfield units', journal:'Med Sci Monit', year:'2026', detail:'n=48 women; 3T MRE at 60 Hz; fatty 1.85 ± 0.32 kPa, fibroglandular 2.95 ± 0.43 kPa.' },
+      { authors:'Berg WA et al.', title:'Quantitative maximum shear wave stiffness of breast masses as a predictor of histopathologic severity', journal:'AJR', year:'2015', detail:'n=1562 masses, 16 centres; SWE Emax: benign median 43 kPa, DCIS median 126 kPa, invasive carcinoma median 180 kPa.' }
+    ]
+  },
+  lung: {
+    name:'Lung', sub:'Parenchymal tissue — healthy and fibrotic (IPF)',
+    eMin:0.5, eMax:20,
+    rows:[
+      { k:'Normal lung parenchyma (indentation, SAOS, uniaxial, AFM, cavitation)', v:'1.0 – 7.7 kPa', type:'h', rMin:1.0, rMax:7.7 },
+      { k:'Fibrotic lung (IPF) — AFM (native human)', v:'14.3 – 18.8 kPa', type:'p', rMin:14.3, rMax:18.8 }
+    ],
+    note:'Wide healthy range (1.0–7.7 kPa) reflects technique dependence: micro-indentation ~1.4 kPa, SAOS ~3.3 kPa, uniaxial ~3.4 kPa, AFM ~1.96 kPa, cavitation rheology ~6.1 kPa. IPF fibrotic lung is ~8× stiffer.',
+    refs:[
+      { authors:'Polio SR et al.', title:'Cross-platform mechanical characterization of lung tissue', journal:'PLoS ONE', year:'2018', detail:'Porcine lung (n=12); micro-indentation 1.4 kPa, SAOS 3.3 kPa, uniaxial 3.4 kPa, cavitation 6.1 kPa.' },
+      { authors:'Booth AJ et al.', title:'Acellular normal and fibrotic human lung matrices as a culture system', journal:'Am J Respir Crit Care Med', year:'2012', detail:'Human AFM: normal 1.96 kPa, IPF 16.52 kPa.' }
+    ]
+  },
+  brain: {
+    name:'Brain', sub:'Central nervous system — grey and white matter',
+    eMin:1, eMax:20,
+    rows:[
+      { k:'Grey matter — indentation',              v:'1.10 – 1.68 kPa',  type:'h', rMin:1.10, rMax:1.68 },
+      { k:'White matter — indentation',             v:'1.30 – 2.49 kPa',  type:'h', rMin:1.30, rMax:2.49 },
+      { k:'Grey matter — MRE (40–60 Hz)',           v:'2.24 – 3.33 kPa',  type:'h', rMin:2.24, rMax:3.33 },
+      { k:'White matter — MRE (40–60 Hz)',          v:'3.36 – 3.85 kPa',  type:'h', rMin:3.36, rMax:3.85 },
+      { k:'Brain — dynamic compression (30–90 /s)', v:'8.83 – 16.0 kPa',  type:'h', rMin:8.83, rMax:16.0 }
+    ],
+    refs:[
+      { authors:'Budday S et al.', title:'Mechanical properties of gray and white matter brain tissue by indentation', journal:'J Mech Behav Biomed Mater', year:'2015', detail:'White matter 1.895 ± 0.592 kPa, grey matter 1.389 ± 0.289 kPa; bovine brain, flat-punch indentation.' },
+      { authors:'Huang X et al.', title:'MR elastography of the brain: feasibility and reproducibility', journal:'Magn Reson Imaging', year:'2019', detail:'White matter 3.36–3.85 kPa; grey matter 2.24–3.33 kPa at 40–60 Hz in vivo.' },
+      { authors:'Rashid B et al.', title:'Mechanical characterization of brain tissue in compression at dynamic strain rates', journal:'J Mech Behav Biomed Mater', year:'2012', detail:'8.83–16.0 kPa at 30–90 s⁻¹; porcine brain.' }
+    ]
+  },
+  heart: {
+    name:'Heart', sub:'Left ventricular myocardium — passive mechanical properties',
+    eMin:1, eMax:20,
+    rows:[
+      { k:'Left ventricle — MRE (140 Hz, early systole)', v:'7.2 – 11.8 kPa', type:'h', rMin:7.2, rMax:11.8 }
+    ],
+    refs:[
+      { authors:'Arani A et al.', title:'Cardiac MR elastography for quantitative assessment of elevated myocardial stiffness in cardiac amyloidosis', journal:'J Magn Reson Imaging', year:'2017', detail:'Healthy volunteers (n=11); median 8.2 kPa, range 7.2–11.8 kPa; 3D MRE at 140 Hz, early systole.' }
+    ]
+  },
+  liver: {
+    name:'Liver', sub:'Parenchymal tissue — healthy, fibrotic, and neoplastic states',
+    eMin:1, eMax:80,
+    rows:[
+      { k:'Healthy parenchyma — MRE / transient elastography', v:'2.06 – 5.0 kPa', type:'h', rMin:2.06, rMax:5.0 },
+      { k:'Fibrotic parenchyma — MRE (F2–F3, in vivo)',       v:'2.56 – 4.68 kPa', type:'p', rMin:2.56, rMax:4.68 },
+      { k:'Hepatocellular carcinoma — transient elastography', v:'20.4 – 75 kPa',   type:'p', rMin:20.4, rMax:75 },
+      { k:'Metastatic tumour — transient elastography',        v:'23.6 – 75 kPa',   type:'p', rMin:23.6, rMax:75 },
+      { k:'Cholangiocellular carcinoma — transient elastography', v:'69 – 75 kPa',  type:'p', rMin:69,   rMax:75 }
+    ],
+    note:'75 kPa upper limit for tumour rows reflects FibroScan device ceiling; true CCC stiffness is likely higher as 5 of 6 cases reached this ceiling.',
+    refs:[
+      { authors:'Huwart L et al.', title:'Liver fibrosis: non-invasive assessment with MR elastography', journal:'NMR Biomed', year:'2006', detail:'Healthy volunteers (n=5) 2.06 ± 0.26 kPa; cirrhosis 4.68 ± 1.61 kPa; 65 Hz MRE.' },
+      { authors:'Masuzaki R et al.', title:'Assessing liver tumor stiffness by transient elastography', journal:'Hepatol Int', year:'2007', detail:'Normal 2.5–5.0 kPa; HCC median 55 kPa (range 20.4–75); CCC median 73.9 kPa; metastatic median 66.5 kPa.' }
+    ]
+  },
+  stomach: {
+    name:'Stomach', sub:'Gastric wall — in situ indentation, fresh human cadaver',
+    eMin:0.5, eMax:7,
+    rows:[
+      { k:'Gastric wall — in situ indentation (1–8 mm depth)', v:'1.08 – 3.01 kPa', type:'h', rMin:1.08, rMax:3.01 }
+    ],
+    refs:[
+      { authors:'Lim YJ et al.', title:'In situ measurement and modeling of biomechanical response of human cadaveric soft tissues', journal:'Surg Endosc', year:'2009', detail:'1.08–3.01 kPa across 1–8 mm depths; mean 1.91 kPa; n=10 fresh cadavers.' }
+    ]
+  },
+  pancreas: {
+    name:'Pancreas', sub:'Human pancreatic parenchyma — ex vivo compression OCE',
+    eMin:50, eMax:170,
+    rows:[
+      { k:'Acinar tissue (healthy parenchyma)',                             v:'54 – 94 kPa',  type:'h', rMin:54,  rMax:94  },
+      { k:'Pancreatic fibrotic stroma (chronic pancreatitis / peritumoral)', v:'106 – 166 kPa', type:'p', rMin:106, rMax:166 }
+    ],
+    note:'Acinar tissue: 74 ± 20 kPa. Fibrotic stroma: 136 ± 30 kPa. Measured by C-OCE at 2 ± 1 kPa applied stress. POPF prediction cutoff: <84 kPa (AUC 0.94).',
+    refs:[
+      { authors:'Gubarkova E et al.', title:'Identifying intact and fibrotic parenchyma in pancreatic ductal adenocarcinomas using compression OCE', journal:'Scientific Reports', year:'2026', detail:'n=35 freshly excised human PDAC specimens; C-OCE at 1.3 µm; validated against H&E and Van Gieson histology.' }
+    ]
+  },
+  kidney: {
+    name:'Kidney', sub:'Renal parenchyma — in vivo elastography',
+    eMin:1, eMax:25,
+    rows:[
+      { k:'Renal cortex — MRE (60 Hz, in vivo)',           v:'4.12 – 4.35 kPa',  type:'h', rMin:4.12, rMax:4.35 },
+      { k:'Renal medulla — MRE (60 Hz, in vivo)',          v:'5.46 kPa',          type:'h', rMin:5.46, rMax:5.46 },
+      { k:'Renal sinus — MRE (60 Hz, in vivo)',            v:'6.78 kPa',          type:'h', rMin:6.78, rMax:6.78 },
+      { k:'Chronic kidney disease — shear wave elastography', v:'5.55 – 22.35 kPa', type:'p', rMin:5.55, rMax:22.35 }
+    ],
+    refs:[
+      { authors:'Bensamoun SF et al.', title:'Stiffness imaging of the kidney and adjacent abdominal tissues measured simultaneously using MRE', journal:'Clin Imaging', year:'2011', detail:'Cortex 4.35 ± 0.32 kPa, medulla 5.46 ± 0.48 kPa, sinus 6.78 ± 0.10 kPa; n=11 healthy volunteers.' },
+      { authors:'Samir AE et al.', title:'Shear wave elastography in chronic kidney disease: a pilot experience', journal:'BMC Nephrol', year:'2015', detail:'Healthy median 4.40 kPa; CKD median 9.40 kPa (IQR 5.55–22.35); n=45.' }
+    ]
+  },
+  prostate: {
+    name:'Prostate', sub:'Glandular tissue — ex vivo robotic indentation',
+    eMin:5, eMax:45,
+    rows:[
+      { k:'Normal prostate tissue — ex vivo indentation', v:'9.82 – 21.40 kPa', type:'h', rMin:9.82, rMax:21.40 },
+      { k:'Prostate cancer — ex vivo indentation',        v:'15.85 – 36.47 kPa', type:'p', rMin:15.85, rMax:36.47 }
+    ],
+    refs:[
+      { authors:'Ahn B et al.', title:'Robotic palpation-based mechanical property mapping for diagnosis of prostate cancer', journal:'J Endourol', year:'2011', detail:'Normal 15.25 ± 5.88 kPa (range 9.82–21.40); cancer 28.80 ± 11.20 kPa (range 15.85–36.47); 35 specimens, 735 sites.' }
+    ]
+  },
+  muscle: {
+    name:'Skeletal muscle', sub:'Passive relaxed muscle — in vivo MRE and SWE',
+    eMin:20, eMax:60,
+    rows:[
+      { k:'Biceps brachii — passive relaxed (MRE)',             v:'49.1 – 53.7 kPa', type:'h', rMin:49.1, rMax:53.7 },
+      { k:'Soleus — passive relaxed (MRE)',                     v:'34.5 – 37.5 kPa', type:'h', rMin:34.5, rMax:37.5 },
+      { k:'Gastrocnemius — passive relaxed (MRE)',              v:'22.7 – 29.7 kPa', type:'h', rMin:22.7, rMax:29.7 },
+      { k:'Flexor digitorum profundus — passive relaxed (MRE)', v:'22.5 – 26.1 kPa', type:'h', rMin:22.5, rMax:26.1 }
+    ],
+    refs:[
+      { authors:'Uffmann K et al.', title:'In vivo elasticity measurements of extremity skeletal muscle with MR elastography', journal:'NMR Biomed', year:'2004', detail:'E ≈ 3G: biceps 17.9 kPa, soleus 12.5 kPa, gastrocnemius 9.9 kPa, FDP 8.7 kPa shear modulus; 12 healthy volunteers.' },
+      { authors:'Eby SF et al.', title:'Shear wave elastography of passive skeletal muscle stiffness: influences of sex and age throughout adulthood', journal:'Clin Biomech', year:'2015', detail:'Biceps SWE G: 5.23 kPa (90° flexion) to 16.13 kPa (full extension); n=133 adults aged 21–94.' }
+    ]
+  },
+  adipose: {
+    name:'Adipose tissue', sub:'Subcutaneous and glandular fat',
+    eMin:2, eMax:25,
+    rows:[
+      { k:'Subcutaneous fat (MRE)',   v:'0.5 – 25 kPa', type:'h', rMin:0.5, rMax:25 },
+      { k:'Normal fat (compression)', v:'18 – 24 kPa',  type:'h', rMin:18,  rMax:24 }
+    ],
+    note:'MRE shear modulus spans a wide range (0.5–25 kPa); compression testing gives more consistent values around 18–24 kPa.',
+    refs:[
+      { authors:'van Houten EEW et al.', title:'Initial in vivo experience with steady-state subzone-based MR elastography of the human breast', journal:'J Magn Reson Imaging', year:'2003', detail:'Adipose tissue shear modulus 0.5–25 kPa.' },
+      { authors:'Krouskop TA et al.', title:'Elastic moduli of breast and prostate tissues under compression', journal:'Ultrason Imaging', year:'1998', detail:'Normal fat 18 ± 7 kPa (5% precompression), 20 ± 8 kPa (20% precompression).' }
+    ]
+  }
+};
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+var currentOrgan = null;
+
+function selectOrgan(key) {
+  if (currentOrgan) {
+    var old = document.getElementById('btn-' + currentOrgan);
+    if (old) old.classList.remove('active');
+  }
+  currentOrgan = key;
+  var btn = document.getElementById('btn-' + key);
+  if (btn) btn.classList.add('active');
+
+  document.getElementById('empty').style.display = 'none';
+  var panel = document.getElementById('panel');
+  panel.style.display = 'block';
+
+  var organ = ORGANS[key];
+  var matching = PHANTOMS.filter(function(p) { return p.modulus >= organ.eMin && p.modulus <= organ.eMax; });
+  var colorMap = {};
+  matching.forEach(function(p, i) { colorMap[p.label] = PHANTOM_COLORS[i % PHANTOM_COLORS.length]; });
+
+  var barsHTML = organ.rows.map(function(r) {
+    var left  = linPos(r.rMin);
+    var width = Math.max(0.5, parseFloat(linPos(r.rMax)) - parseFloat(linPos(r.rMin))).toFixed(1);
+    var fc    = r.type === 'h' ? 'bar-fill-h' : 'bar-fill-p';
+    var lines = PHANTOMS.map(function(p) {
+      var pos     = linPos(p.modulus);
+      var inRange = p.modulus >= organ.eMin && p.modulus <= organ.eMax;
+      var color   = inRange ? colorMap[p.label] : 'var(--border-strong)';
+      var opacity = inRange ? '0.9' : '0.35';
+      return '<div class="pline" data-phantom="' + p.label + '" style="left:' + pos + '%;background:' + color + ';opacity:' + opacity + '" title="' + p.label + ': ' + p.modulus.toFixed(2) + ' kPa"></div>';
+    }).join('');
+    return '<div class="bar-row"><div class="bar-label">' + r.k + '</div>' +
+      '<div class="bar-meta"><div class="bar-track"><div class="' + fc + '" style="left:' + left + '%;width:' + width + '%"></div>' + lines + '</div>' +
+      '<div class="bar-val">' + r.v + '</div></div></div>';
+  }).join('');
+
+  var refsHTML = '<div class="refs"><div class="refs-label">Primary sources</div>' +
+    organ.refs.map(function(r) {
+      return '<div class="ref-item"><strong>' + r.authors + '</strong> (' + r.year + '). ' +
+        r.title + '. <em>' + r.journal + '</em>. ' +
+        '<span style="color:var(--text-muted)">' + r.detail + '</span></div>';
+    }).join('') + '</div>';
+
+  var legendHTML = matching.length === 0
+    ? '<p class="no-match">No phantoms fall within this stiffness range.</p>'
+    : matching.map(function(p) {
+        return '<div class="pl-item" data-phantom="' + p.label + '" id="pl-' + p.label + '">' +
+          '<div class="pl-swatch" style="background:' + colorMap[p.label] + '"></div>' + p.label + '</div>';
+      }).join('');
+
+  var gridHTML = matching.length === 0
+    ? '<p class="no-match">No phantoms fall within this range.</p>'
+    : matching.map(function(p) {
+        return '<div class="pc" data-phantom="' + p.label + '" id="pc-' + p.label + '">' +
+          '<div class="pc-label"><span class="pc-stripe" style="background:' + colorMap[p.label] + '"></span>' + p.label + '</div>' +
+          '<div class="pc-mod">' + p.modulus.toFixed(2) + ' ± ' + p.sd + ' kPa</div></div>';
+      }).join('');
+
+  panel.innerHTML =
+    '<div class="organ-header">' +
+      '<svg class="organ-illus" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">' + (ILLUS[key] || '') + '</svg>' +
+      '<div><div class="organ-name">' + organ.name + '</div><div class="organ-sub">' + organ.sub + '</div></div>' +
+    '</div>' +
+
+    '<div class="sec-label">Stiffness range (literature)</div>' +
+    '<div class="legend">' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--healthy);opacity:0.8"></div>Healthy</div>' +
+      '<div class="legend-item"><div class="legend-dot" style="background:var(--patho);opacity:0.8"></div>Pathological</div>' +
+      '<div class="legend-item"><div style="width:2px;height:12px;border-radius:1px;background:#6366f1;opacity:0.9;display:inline-block"></div>&nbsp;Phantom</div>' +
+    '</div>' +
+    '<div class="scale-labels"><span>0 kPa</span><span>60 kPa</span><span>120 kPa</span><span>180 kPa</span></div>' +
+    barsHTML +
+    '<div class="axis-note">Scale: 0 – 180 kPa</div>' +
+    (organ.note ? '<p class="bar-note">' + organ.note + '</p>' : '') +
+    refsHTML +
+
+    '<div class="divider"></div>' +
+    '<div class="sec-label">Phantom legend</div>' +
+    '<div class="phantom-legend">' + legendHTML + '</div>' +
+
+    '<div class="sec-label">Select a phantom for fabrication recipe</div>' +
+    '<div class="phantom-grid">' + gridHTML + '</div>' +
+    '<div class="recipe" id="recipe"><div class="recipe-title" id="recipe-title"></div><div id="recipe-rows"></div></div>' +
+    '<div class="hyper-panel" id="hyper-panel">' +
+      '<div class="hyper-header">' +
+        '<div class="hyper-header-left">Hyperelastic model parameters</div>' +
+        '<div class="stress-toggle">' +
+          '<button class="stress-btn active" id="btn-eng" onclick="setStressType(\"engineering\")">Engineering</button>' +
+          '<button class="stress-btn" id="btn-true" onclick="setStressType(\"true\")">True</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hyper-best">' +
+        '<div class="hyper-best-label">Best fit model (lowest AIC)</div>' +
+        '<div class="hyper-best-name" id="hyper-best-name"></div>' +
+        '<div class="hyper-params-row" id="hyper-best-chips"></div>' +
+        '<div class="hyper-metrics">' +
+          '<div class="hyper-metric" id="hyper-best-s"></div>' +
+          '<div class="hyper-metric" id="hyper-best-aic"></div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="hyper-models-list"><div id="hyper-rows"></div></div>' +
+    '</div>';
+
+  panel.querySelectorAll('[data-phantom]').forEach(function(el) {
+    el.addEventListener('click', function() { selectPhantom(el.getAttribute('data-phantom')); });
+  });
+
+  panel.scrollTop = 0;
+}
+
+
+// ── HYPERELASTIC DATA ─────────────────────────────────────────────────────────
+var HYPER_DATA = {"engineering":{"EF10_0T":{"Ogden_o1":{"parameters":[6.053215397335692,4.716361929721629],"S":2.107273323699518,"SSE":4427.279058193288,"AIC":1491.785187271208,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.12417390069519788,10.490170497920474,10.288743071796029,2.809208179042821],"S":0.8266014090595012,"SSE":679.853540011857,"AIC":-377.8778863455953,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.0033256129620802643,0.12417784139224848,10.486848090548122,2.784612642310612,10.288693265085463,2.8092090482232233],"S":0.82743342675293,"SSE":679.8535531781397,"AIC":-373.877866979244,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[10.980698962635001],"S":13.04423962135887,"SSE":169811.88292482973,"AIC":5136.691253318085,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[5.707526004454916,1.2922166596891371],"S":2.943832856330179,"SSE":8640.153430351074,"AIC":2160.4203408007756,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[7.702124990536888,-0.06281093434137051,0.24786790575177323],"S":0.6582210992631491,"SSE":431.52199545312754,"AIC":-834.4367953588999,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.12629731783575288,4.5823764683543615],"S":3.5128210973302,"SSE":12302.892325662608,"AIC":2513.834383163168,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[34.5118606220986,-22.372783930819537,7.522479798100154],"S":0.7660357586031714,"SSE":584.4635403249014,"AIC":-531.0608775606529,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[21.961397925705736],"S":13.04423962135887,"SSE":169811.88292482973,"AIC":5136.691253318085,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[95.51690489272441,0.24550620134848936],"S":2.699516698616265,"SSE":7265.528234889733,"AIC":1987.1410039302712,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[24.913774099925025,0.25632132675189573],"S":1.7765076911058229,"SSE":3146.5116378284674,"AIC":1150.2944226363513,"order":2,"stress_unit":"kPa"}},"EF10_12_5T":{"Ogden_o1":{"parameters":[4.068023556914178,4.677809633013414],"S":1.359351369500503,"SSE":1842.2926373256046,"AIC":615.010794555437,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[6.977958608551051,0.08521463172113869,2.8001383518165444,10.192922270367374],"S":0.548882882201938,"SSE":299.7660562824351,"AIC":-1196.7529209296647,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.9167912082696181,6.061053030615925,0.0852073845300955,2.8003934095837675,2.800168465658535,10.193032953673326],"S":0.5494353580143565,"SSE":299.7660581479095,"AIC":-1192.7529147065636,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[7.250746028763144],"S":8.478862395556678,"SSE":71747.32530773956,"AIC":4275.150576003979,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[3.821741888581686,0.8402941284359798],"S":1.8988917974559243,"SSE":3594.9726882700547,"AIC":1283.5363940009122,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[5.106045538445356,-0.032195477906423055,0.1595998284020703],"S":0.43872953897026845,"SSE":191.71367393160406,"AIC":-1645.7523016277341,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[0.027808714968387938,2.9799431896526216],"S":2.2699640488255004,"SSE":5137.278572611379,"AIC":1640.5234786718822,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[22.46617715805436,-14.481429003364712,4.873011518269057],"S":0.4702592317671081,"SSE":220.25917008194193,"AIC":-1506.9503801542724,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[14.501492056794055],"S":8.478862395556678,"SSE":71747.32530773956,"AIC":4275.150576003979,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[63.906072426841874,0.24439714974017185],"S":1.8308226440193394,"SSE":3341.8558191924026,"AIC":1210.5262871696661,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[16.891947956251624,0.2520002712649285],"S":1.1554224813664802,"SSE":1330.9961071157334,"AIC":289.92761462712974,"order":2,"stress_unit":"kPa"}},"EF10_25T":{"Ogden_o1":{"parameters":[3.089037360893538,4.604726766855649],"S":0.938539253468543,"SSE":878.2133625103863,"AIC":-125.86570517617028,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.06710179707584475,5.106624278184179,9.986533675402548,2.831158956934834],"S":0.4150038513900656,"SSE":171.36705568524474,"AIC":-1755.9474984965693,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[2.8732060594177082,2.232973585688963,0.06706074871115676,2.83150327219837,2.8315178613049587,9.987352653971532],"S":0.41542157782847533,"SSE":171.36706171422148,"AIC":-1751.947463314914,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[5.325180001733462],"S":6.0383532865791425,"SSE":36388.78699271405,"AIC":3596.2606775349423,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[2.8798718457952455,0.5992299792033726],"S":1.3171622274481978,"SSE":1729.711584416049,"AIC":551.9546804009525,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[3.7632381460911777,-0.0008787665619208135,0.1097738222340633],"S":0.3465803108194805,"SSE":119.63744020033678,"AIC":-2117.2894413006984,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[0.1732540720620216,2.125505421662791],"S":1.583441610964866,"SSE":2499.7654733290046,"AIC":920.1969168052608,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[15.906952923675354,-10.118334039441333,3.416931199506605],"S":0.28728908981394746,"SSE":82.20488104162187,"AIC":-2492.540598614537,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[10.650359989155199],"S":6.038353286579143,"SSE":36388.78699271406,"AIC":3596.2606775349423,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[48.09087446671092,0.24235558502627852],"S":1.4346281432718924,"SSE":2051.9834357393543,"AIC":722.8068550241657,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[13.05958969610216,0.24374399444648],"S":0.8128461021466519,"SSE":658.7366294176802,"AIC":-413.431476231707,"order":2,"stress_unit":"kPa"}},"EF10_37_5T":{"Ogden_o1":{"parameters":[2.1059134055848046,4.857480996018042],"S":0.6844496063062193,"SSE":467.06584978202045,"AIC":-757.2850252964282,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[3.2795187373392274,-0.039357047975776535,3.255305258061526,-5.198146364491727],"S":0.2854387732110632,"SSE":81.0679167859756,"AIC":-2504.467996797502,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[3.460337222567202,9.161781055045013,0.06680241781393079,2.9857747965084096,6.648031502825648e-06,9.68692469229377],"S":0.27573817735969897,"SSE":75.49932165647326,"AIC":-2571.6316074499937,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[4.074317264169293],"S":5.100832276604943,"SSE":25966.45293422665,"AIC":3258.8054331436515,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[2.001047593027884,0.5080608507228003],"S":1.0269319762127083,"SSE":1051.425515916834,"AIC":54.14687762388998,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[2.695724890740713,0.03613666538569518,0.08632589007376539],"S":0.2365267016553765,"SSE":55.7211010735876,"AIC":-2881.3963694332624,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.29765026583473014,1.803721723881039],"S":1.2515733962236133,"SSE":1561.7366582363054,"AIC":449.79844452572945,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[12.086398995683766,-7.8334475478414864,2.6894787641545643],"S":0.25340092554492677,"SSE":63.95518095075742,"AIC":-2743.5727385898153,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[8.148634529355256],"S":5.100832276604942,"SSE":25966.452934226647,"AIC":3258.8054331436515,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[33.59612215768179,0.2500337893962977],"S":1.0650258269704296,"SSE":1130.8771720777052,"AIC":126.9935900673116,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[8.454928784696076,0.2712550110654855],"S":0.5503458668375841,"SSE":301.9719314257763,"AIC":-1193.4212082254246,"order":2,"stress_unit":"kPa"}},"EF10_50T":{"Ogden_o1":{"parameters":[1.638669413119328,5.02950689470965],"S":0.5417707857668039,"SSE":292.635037557449,"AIC":-1224.8290519825107,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[2.623060309966177,0.07461008186728699,3.1115546594387378,9.299562853012317],"S":0.23673453008479278,"SSE":55.76302154579532,"AIC":-2878.644325587044,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[2.5926739806402552,0.030296245287590614,0.07458585827501288,3.111760240161736,3.1115885787311868,9.299988534101656],"S":0.23697281889705482,"SSE":55.76302407774422,"AIC":-2874.644280181527,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[3.4295758374293794],"S":4.569149657344049,"SSE":20835.374334024826,"AIC":3038.652231308883,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[1.5678279461650237,0.45622947991639085],"S":0.8644372755848844,"SSE":745.0100480103555,"AIC":-290.3575734313076,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[2.1502032636471897,0.060594528305941316,0.07237123397112677],"S":0.21308073163915286,"SSE":45.22178460309318,"AIC":-3090.176348004062,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.4985186006714243,1.6205994218691162],"S":1.0668920338887036,"SSE":1134.8438361392493,"AIC":130.49505216246325,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[10.089439894101705,-6.618869998936647,2.2994194286670226],"S":0.20046329190370588,"SSE":40.024789275266905,"AIC":-3212.256284941028,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[6.8591516764056415],"S":4.569149657344049,"SSE":20835.374334024826,"AIC":3038.652231308883,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[26.506111688457207,0.2556768405247902],"S":0.9026279389741504,"SSE":812.2929846280724,"AIC":-203.89418539232432,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[6.3957551846270135,0.2898061161663934],"S":0.4204913802349042,"SSE":176.2825618492992,"AIC":-1731.6671062724538,"order":2,"stress_unit":"kPa"}},"EF10_62_5T":{"Ogden_o1":{"parameters":[1.2177578580930104,5.3416642167307975],"S":0.47790882195936873,"SSE":227.71165158027182,"AIC":-1475.6751364694396,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.07158957653761776,2.0240692074181377,9.325235077772302,3.1881893518603395],"S":0.1768731890808493,"SSE":31.127704390551727,"AIC":-3461.6570399219586,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.8398604103932359,0.07148519281891573,1.1837493498626073,3.189470629388571,9.327071727929724,3.1894144387148904],"S":0.17705124297388214,"SSE":31.127712640126475,"AIC":-3457.656774898443,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[2.9404217576025897],"S":4.344663347059235,"SSE":18838.347400081395,"AIC":2937.8945476830413,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[1.1695118182552726,0.43396839599131753],"S":0.8139899554636423,"SSE":660.5919086529152,"AIC":-410.61901458227277,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[1.725040062151103,0.05657266610245973,0.06903470549533883],"S":0.15469310210545584,"SSE":23.83423601565295,"AIC":-3730.6322438848747,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.7968516422294674,1.5418717222182898],"S":1.0041501410871518,"SSE":1005.292553327811,"AIC":9.27859698890169,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[9.067128238607161,-6.13420218723495,2.142190128188475],"S":0.23510695027201195,"SSE":55.05417695394148,"AIC":-2893.4375430525947,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[5.880843510377427],"S":4.344663347059235,"SSE":18838.347400081395,"AIC":2937.8945476830413,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[20.17451003609254,0.26647564811201657],"S":0.6952635826922559,"SSE":481.94127506981704,"AIC":-725.933008308876,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[4.5450530140796,0.3241142463184483],"S":0.33256151051929445,"SSE":110.26536680403817,"AIC":-2200.8653929253496,"order":2,"stress_unit":"kPa"}},"EF10_75T":{"Ogden_o1":{"parameters":[0.8281555263972105,5.780217114360387],"S":0.3880183100597593,"SSE":150.1065343148066,"AIC":-1892.410008213598,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.08304688356681636,1.4048302939762918,9.053301824100451,3.2595565655005907],"S":0.14449180283663973,"SSE":20.773491681547455,"AIC":-3866.0775434492457,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[1.297232581114632,0.10722744234457661,0.08293332509432066,3.261411543083888,3.258441707072788,9.054979618517509],"S":0.14463725840855227,"SSE":20.77349696430273,"AIC":-3862.077289146566,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[2.4463480999378087],"S":4.105860779852105,"SSE":16824.376558040687,"AIC":2824.828820344446,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[0.7713182141943455,0.41047341423734657],"S":0.7506140874620574,"SSE":561.7312437716075,"AIC":-572.7317573987182,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[1.2861189847094796,0.06074503163907584,0.06397380842264291],"S":0.12238383851197072,"SSE":14.917892713208433,"AIC":-4199.193933242795,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-1.089563140427914,1.4587978414995206],"S":0.9294536967255759,"SSE":861.2925218337682,"AIC":-145.32108564224677,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[7.9994237969995,-5.614183240443983,1.973883191969476],"S":0.23396919403709854,"SSE":54.52261742333599,"AIC":-2903.139664807717,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[4.8926961965117775],"S":4.105860779852105,"SSE":16824.376558040687,"AIC":2824.828820344446,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[14.043085008650747,0.28363009739016265],"S":0.5177115253450333,"SSE":267.22114780465574,"AIC":-1315.6786944760158,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[2.9658060241239146,0.37168060421396903],"S":0.2405720756662799,"SSE":57.701298819611154,"AIC":-2848.475595849483,"order":2,"stress_unit":"kPa"}},"EF10_87_5T":{"Ogden_o1":{"parameters":[0.8229732011988007,5.439853431426303],"S":0.2441812121173274,"SSE":59.445590958033975,"AIC":-2818.693822463848,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[1.0984760374862605,-0.02247352292006218,4.2135963210020755,-5.020873535613314],"S":0.11600423491516193,"SSE":13.389697605660814,"AIC":-4305.269703129228,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[1.098324013474388,11.29273473598889,-0.022411499057726648,4.214663554333594,2.0962564189737338e-07,-5.022576616068032],"S":0.11612106855067376,"SSE":13.389713843420825,"AIC":-4301.268490424458,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[2.078457435325908],"S":3.1655388207437465,"SSE":10000.594753584437,"AIC":2304.6445665839005,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[0.7812156341578083,0.3178916930319001],"S":0.4970720365061116,"SSE":246.3393676479041,"AIC":-1397.0451504611976,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[1.1177661699559636,0.08925932930731444,0.04182200719481814],"S":0.11263031257015152,"SSE":12.634844960411433,"AIC":-4365.296808861393,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.6628596284671121,1.1309700699170075],"S":0.6378660197777024,"SSE":405.6524400094872,"AIC":-898.2585450981718,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[5.658562573446806,-3.7883090524741823,1.3728398252853202],"S":0.12432975226969786,"SSE":15.396055750246662,"AIC":-4167.643922480764,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[4.156914870246391],"S":3.1655388207437465,"SSE":10000.594753584437,"AIC":2304.6445665839005,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[13.619081377679228,0.27073610975157514],"S":0.5740581294489482,"SSE":328.554107778466,"AIC":-1109.0537429665603,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[3.0541923267668447,0.3337752111074453],"S":0.16540694422235244,"SSE":27.277378825385487,"AIC":-3597.6975347366847,"order":2,"stress_unit":"kPa"}},"EF10_100T":{"Ogden_o1":{"parameters":[0.6213344795972121,5.528887042404073],"S":0.2168975952122526,"SSE":46.903433108431614,"AIC":-3055.664405602719,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.8982313364869458,-0.023413236660982335,3.9585303948644133,-4.951810377110937],"S":0.07777985060244624,"SSE":6.019456633940164,"AIC":-5104.758283877929,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.0005601404429781937,0.9583553483328042,0.05885521782371574,5.501516218018146,3.3528516466722182,8.760563214628885],"S":0.07133812069366338,"SSE":5.053503571854957,"AIC":-5275.673499641662,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[1.6348126686780406],"S":2.55587537856469,"SSE":6519.433952851692,"AIC":1876.7875551224572,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[0.589138177367711,0.2562466177406018],"S":0.42679513269606867,"SSE":181.60762303717573,"AIC":-1701.906836618998,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[0.8822379877064862,0.05713051909602405,0.03642309683648012],"S":0.06612387772960569,"SSE":4.354877737175844,"AIC":-5430.458743199003,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.5742388135487263,0.9113794087910426],"S":0.538268884338762,"SSE":288.86419167175364,"AIC":-1237.7986263302994,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[4.68462456214697,-3.181028113817091,1.1420832444648779],"S":0.13721793807184482,"SSE":18.753447478573886,"AIC":-3970.3776779429704,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[3.2696253389201804],"S":2.55587537856469,"SSE":6519.433952851692,"AIC":1876.7875551224572,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[10.360337884585794,0.2739328440415331],"S":0.41125509704069013,"SSE":168.62336257742163,"AIC":-1776.0876749391894,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[2.279335874156877,0.3439084102394806],"S":0.1295532982028516,"SSE":16.733704904011283,"AIC":-4086.3303357800987,"order":2,"stress_unit":"kPa"}},"EF30_0T":{"Ogden_o1":{"parameters":[14.202303878777826,3.9700359985056353],"S":2.9652630462552882,"SSE":8766.406578686729,"AIC":2174.926982245099,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.11597852052455487,21.929799010391598,10.61399087811772,2.6050267697526204],"S":1.5190677864963062,"SSE":2296.0291052709335,"AIC":839.1811548887043,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[8.993286988037166,0.11596181476504829,12.936081533073185,2.6050954204317556,10.614183605993023,2.6050866626251303],"S":1.5205967939144787,"SSE":2296.0291073953504,"AIC":843.1811558139613,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[18.328491245807186],"S":15.277517568803606,"SSE":232935.73797897267,"AIC":5452.762612859798,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[12.189364936467578,1.5044139465755042],"S":3.8110978537848803,"SSE":14480.893450570347,"AIC":2676.8300874415113,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[14.6899960308889,-0.1943757158057544,0.3107486648843412],"S":1.2589984450634342,"SSE":1578.7367763334564,"AIC":462.62501861166913,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[5.415513055803567,5.327450295450641],"S":4.48313412928202,"SSE":20038.19614626986,"AIC":3001.640259504097,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[50.17413731506803,-29.503361351683655,9.720359202183921],"S":0.689548808078014,"SSE":473.57564848692255,"AIC":-741.4436146250747,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[36.65698248645208],"S":15.277517568803606,"SSE":232935.73797897267,"AIC":5452.762612859798,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[203.59694303695127,0.22590518232308845],"S":5.818548783199421,"SSE":33753.94341264405,"AIC":3523.0972523491805,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[72.6616842515312,0.1749429688516756],"S":2.904962033639935,"SSE":8413.4880036388,"AIC":2133.8361327866487,"order":2,"stress_unit":"kPa"}},"EF30_12_5T":{"Ogden_o1":{"parameters":[11.210557097224562,3.4768689680057427],"S":1.9288600628999104,"SSE":3709.339638823496,"AIC":1314.8538658500854,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[16.754566271069127,-0.025044717267371206,2.3582837429812713,-6.001038708567893],"S":1.1671171233193103,"SSE":1355.3515676474165,"AIC":312.0608801962529,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[9.93737941284799,0.029711524575517526,7.0590457672562295,2.3166594922357464,11.74738518625237,2.3167536094288668],"S":1.1625780610161522,"SSE":1342.1266337203838,"AIC":306.2553960353754,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[11.539308522005632],"S":7.038789623757277,"SSE":49445.47024877809,"AIC":3902.870451219314,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[8.779928116790932,0.6761995780503662],"S":2.3082446491529076,"SSE":5312.009380262001,"AIC":1673.970178035149,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[10.256613189361312,-0.32698403670763027,0.18350698005065155],"S":0.9033677308324426,"SSE":812.8089640809189,"AIC":-201.25917357587176,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[5.759623728739414,2.3845052900048813],"S":2.610709716971144,"SSE":6795.357810608688,"AIC":1920.2397041429504,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[31.890403262156116,-17.950272682183055,5.674903441168077],"S":0.3570501494421248,"SSE":126.97486997977711,"AIC":-2057.766086278207,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[23.07861704495893],"S":7.038789623757277,"SSE":49445.47024877808,"AIC":3902.8704512193135,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[148.08398380989098,0.21529437806117255],"S":3.8949139329523232,"SSE":15124.843481470816,"AIC":2720.3386555308525,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[72.18700678478176,0.12364711016307804],"S":2.0227918221581427,"SSE":4079.41169552249,"AIC":1409.9527857454655,"order":2,"stress_unit":"kPa"}},"EF30_25T":{"Ogden_o1":{"parameters":[7.456133903813111,3.9272202261077394],"S":1.2698285046729143,"SSE":1607.6270379860098,"AIC":478.75920230318417,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[10.406808505568632,-0.05275959782533306,2.8495434533602113,-5.249461935879127],"S":0.7306294043681737,"SSE":531.1502298947553,"AIC":-624.7103789316667,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[7.767365859291717,2.9856334328342538,0.08186000953411976,2.718453430237661,2.718461436186816,9.9009261573142],"S":0.7198960137478105,"SSE":514.6225187157178,"AIC":-652.3216204422536,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[9.435852599006722],"S":7.633990029029989,"SSE":58161.248155802634,"AIC":4065.219293720616,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[6.346660243545106,0.7570245476679873],"S":1.690021757074391,"SSE":2847.605018766657,"AIC":1050.4782967009573,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[7.43129850630848,0.02017439933397001,0.1347885488239311],"S":0.6495941851241317,"SSE":420.28471492569633,"AIC":-860.8229046899502,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[2.9285283997624147,2.6847098074566684],"S":2.0270610835402523,"SSE":4096.6497064941705,"AIC":1414.1694949079774,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[23.102990612948602,-13.014911631641427,4.381355027928842],"S":0.3497540289141016,"SSE":121.83856921867965,"AIC":-2099.058313580731,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[18.871705197449362],"S":7.633990029029989,"SSE":58161.248155802634,"AIC":4065.219293720616,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[105.93346748440239,0.22507225130566666],"S":3.298721637235539,"SSE":10848.919746646017,"AIC":2388.0655125086873,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[38.9153047383954,0.1699710840317278],"S":1.263569607493165,"SSE":1591.8183285214902,"AIC":468.87696566023044,"order":2,"stress_unit":"kPa"}},"EF30_37_5T":{"Ogden_o1":{"parameters":[5.8748703292632145,3.642132461280191],"S":0.9607618281705054,"SSE":920.2941005981231,"AIC":-79.06198546090017,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[8.76918027101583,0.029243512287477492,2.4558068385079994,10.88299933456089],"S":0.5248498377957854,"SSE":274.09001547309094,"AIC":-1286.2987029217172,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[213.40920042903255,-0.0368643124798646,142.34534031863768,0.0001898560551693681,-5.510585366643349,0.12872520819468908],"S":0.7977802010518289,"SSE":631.9980764459644,"AIC":-446.86892843806896,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[6.524881103375915],"S":4.431886984717004,"SSE":19602.339000813372,"AIC":2977.6488958925975,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[4.754233285335785,0.4339058523796899],"S":1.1976522446702285,"SSE":1430.0677864661457,"AIC":361.7218462715022,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[5.532531133383777,-0.09482953115360303,0.09671871831467696],"S":0.42539489119100116,"SSE":180.23697019759808,"AIC":-1707.4827928219042,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[2.8041742509118603,1.5350396266090691],"S":1.3903234756433285,"SSE":1927.2003688241705,"AIC":660.0683636967599,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[16.61739187591319,-9.214303145730916,2.999859684748493],"S":0.2531081022284564,"SSE":63.80745656803598,"AIC":-2745.885221353492,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[13.049762204515488],"S":4.431886984717004,"SSE":19602.339000813372,"AIC":2977.6488958925975,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[79.8012722762553,0.21873861309806286],"S":2.2662984169401525,"SSE":5120.700189081565,"AIC":1637.2911853812043,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[34.690371178542385,0.1404147233744338],"S":0.9875956077517408,"SSE":972.4190491971788,"AIC":-23.96844685424165,"order":2,"stress_unit":"kPa"}},"EF30_50T":{"Ogden_o1":{"parameters":[4.23508255091474,4.159832484307275],"S":0.7838191270488155,"SSE":612.5293066557845,"AIC":-486.15849010663425,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[5.904356193355576,-0.039866930228909636,3.034225074253588,-5.17067485734975],"S":0.4048303778285379,"SSE":163.06819663873276,"AIC":-1805.586781386972,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.7034057497294735,5.904216929832095,-0.03986444980339812,0.00044826228781588,3.034239649702545,-5.170729654417297],"S":0.405243039093954,"SSE":163.0723672889652,"AIC":-1801.5612056034358,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[5.95999789212751],"S":5.472438634069348,"SSE":29887.689434447475,"AIC":3399.4466710143765,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[3.7353059310088823,0.5451715763294517],"S":1.0974230667361775,"SSE":1200.7243752424229,"AIC":186.92502070832637,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[4.4547947909490135,0.056387983367575584,0.08941055230998393],"S":0.3649210321465924,"SSE":132.63469026412258,"AIC":-2014.1566195776443,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[1.2691287901673545,1.9352962390904722],"S":1.3411777953148265,"SSE":1793.361605009602,"AIC":588.0918502565618,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[14.662043758442152,-8.486970480640018,2.908581435512927],"S":0.20449963835891583,"SSE":41.65282168057165,"AIC":-3172.3861652313467,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[11.919995784049618],"S":5.472438634069348,"SSE":29887.689434447475,"AIC":3399.4466710143765,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[62.18536819933453,0.23069278383241723],"S":2.0114116242143747,"SSE":4033.6393918586355,"AIC":1398.6690433346719,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[20.342557012266933,0.19474873231221468],"S":0.7400060486718444,"SSE":545.9661252147034,"AIC":-601.1983468932121,"order":2,"stress_unit":"kPa"}},"EF50_0T":{"Ogden_o1":{"parameters":[22.92865421966303,3.874778728131699],"S":4.799709442940378,"SSE":22968.09910444108,"AIC":3138.1062577015246,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[11.464325677899014,11.464325677899014,3.874779002499321,3.874779002499321],"S":4.804530849920602,"SSE":22968.09910439959,"AIC":3142.106257699718,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[13.112099521966215,0.136536723644645,22.86028561682596,2.5121120940025734,11.044371818578124,2.512082205847829],"S":2.421508924964463,"SSE":5822.659535366772,"AIC":1773.757122206362,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[28.32952131794278],"S":22.399980387406085,"SSE":500755.6031134649,"AIC":6218.118163926092,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[19.375320240082736,2.194287582937951],"S":6.011793700630002,"SSE":36033.238508437775,"AIC":3588.4418043853693,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[23.332635084957882,-0.49412900891375106,0.4917813483551536],"S":1.9330697439521496,"SSE":3721.811600443297,"AIC":1320.210539110695,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[9.511988653781188,7.7635141421138485],"S":6.986214771407243,"SSE":48660.77524173207,"AIC":3888.8732690355378,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[78.92492551982542,-46.25315184523957,15.074650878502238],"S":1.2700974665995983,"SSE":1606.6949843640668,"AIC":480.17926436194176,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[56.65904264410279],"S":22.399980387406085,"SSE":500755.6031134649,"AIC":6218.118163926092,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[324.1472675144839,0.22368056265828498],"S":8.905754135588206,"SSE":79074.51935337578,"AIC":4374.390690809354,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[121.65005880999324,0.1649860938455354],"S":4.750717554549073,"SSE":22501.60933125142,"AIC":3117.5868324859202,"order":2,"stress_unit":"kPa"}},"EF50_12_5T":{"Ogden_o1":{"parameters":[17.42234734157157,3.6983217143800062],"S":2.9657180747854017,"SSE":8769.097248011503,"AIC":2175.233864713089,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[24.888329903916723,-0.07472825462817294,2.6234762245433174,-5.541883863687929],"S":1.8228345111304065,"SSE":3306.1120266931885,"AIC":1203.772884696827,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[25.48278719694845,11.810216721316895,0.10117008519770063,2.5426570272963445,2.3685901519709014e-06,10.654062990097373],"S":1.80837358719567,"SSE":3247.323525650867,"AIC":1189.8311264850945,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[19.8552604625352],"S":14.010121862490498,"SSE":195890.94757263054,"AIC":5279.558114452641,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[14.250755954104912,1.3734164154483717],"S":3.724461274255784,"SSE":13829.996948080725,"AIC":2630.8399250027974,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[16.603732752344712,-0.22508085339834277,0.2924056234705935],"S":1.5544572180323162,"SSE":2406.671893721997,"AIC":884.2448361409135,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[8.076201312846946,4.859655780978683],"S":4.336154036312591,"SSE":18745.825131150083,"AIC":2934.971067952079,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[51.267423756047755,-28.75144081043209,9.379980094357668],"S":0.7280490242038532,"SSE":527.9351601176062,"AIC":-632.7818056243217,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[39.71052092483836],"S":14.010121862490497,"SSE":195890.9475726305,"AIC":5279.558114452641,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[238.9797205223781,0.21990666166379544],"S":6.91416955824605,"SSE":47662.32345813584,"AIC":3868.1412211775746,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[100.2001176292448,0.14614227371131172],"S":3.0604447720778767,"SSE":9338.223236329992,"AIC":2238.116002488097,"order":2,"stress_unit":"kPa"}},"EF50_25T":{"Ogden_o1":{"parameters":[13.934597473164764,3.650826014067457],"S":2.392362383582919,"SSE":5706.227581059399,"AIC":1745.5581365138878,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[21.43733596342326,-0.05155167486088509,2.408409079702775,-5.736489854697475],"S":1.0821425473489472,"SSE":1165.1773303189543,"AIC":160.87329030021183,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[21.845087278760715,13.989113529949858,0.06233903232915104,2.3513970250097547,1.5335093102753068e-05,11.196557452102242],"S":1.072891073441016,"SSE":1143.0375886811294,"AIC":145.6892702571814,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[15.538356054955674],"S":10.633178474768977,"SSE":112838.35550733774,"AIC":4727.956312359907,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[11.298168119507931,1.0390746193471143],"S":2.941428013376392,"SSE":8626.042761601764,"AIC":2158.785855505477,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[13.271741650895798,-0.3016641019358421,0.24525318123270487],"S":0.7693198677562381,"SSE":589.4856466887778,"AIC":-522.5049075814107,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[6.6292785645449355,3.675581938078761],"S":3.3959549542598824,"SSE":11497.912521208154,"AIC":2446.1654989975314,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[39.93436282977751,-22.242179670824886,7.232964627677304],"S":0.8168216887874017,"SSE":664.5288805884089,"AIC":-402.67693963873745,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[31.0767120885651],"S":10.633178474768977,"SSE":112838.35550733772,"AIC":4727.956312359907,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[189.61346088270807,0.21890957085044332],"S":5.226252430869575,"SSE":27231.773327756637,"AIC":3308.384428610604,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[81.78116426058213,0.1415096969965449],"S":2.411462203554666,"SSE":5797.704509295207,"AIC":1761.462064953624,"order":2,"stress_unit":"kPa"}},"EF50_37_5T":{"Ogden_o1":{"parameters":[10.308611012887486,4.12167490785459],"S":1.9419218077984641,"SSE":3759.747126680445,"AIC":1328.3517015977475,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[56.68293418575868,-0.34060440621743876,0.6452446940365318,-4.532825772689117],"S":1.337341549507028,"SSE":1779.540007937669,"AIC":584.3549084002165,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.15149615528712543,10.751125580029568,4.517591739547033,9.76920548222095,2.7787151698394754,2.778790890850657],"S":0.9388669683029752,"SSE":875.3008858812269,"AIC":-121.18758215557085,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[14.256932076765523],"S":12.839894554246143,"SSE":164533.16637983144,"AIC":5105.112169213263,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[9.04499104539127,1.2772164554250578],"S":2.6654832879723602,"SSE":7083.486754984564,"AIC":1961.7662659949847,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[10.80459415719118,0.08182821990371172,0.21866677560209163],"S":0.8354350526309294,"SSE":695.1599202557861,"AIC":-357.6133587990778,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[3.2702586345565074,4.532743261371194],"S":3.2327879145101877,"SSE":10419.56494710252,"AIC":2347.685283735985,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[35.37841922059421,-20.45359755622401,6.973036614177362],"S":0.5936753070177715,"SSE":351.0405686819947,"AIC":-1040.8534819045751,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[28.51386415468327],"S":12.839894554246143,"SSE":164533.16637983144,"AIC":5105.112169213263,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[150.63379028339955,0.22972105919995747],"S":4.766935666181534,"SSE":22655.504618577044,"AIC":3124.4028519199037,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[50.10470346329334,0.19076497658254785],"S":1.8316129218719022,"SSE":3344.7414778814227,"AIC":1211.389404459361,"order":2,"stress_unit":"kPa"}},"EF50_50T":{"Ogden_o1":{"parameters":[8.379407176468384,4.090230492301786],"S":1.5390919778679173,"SSE":2361.697703988366,"AIC":863.380726514514,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[11.886415256784986,-0.07371306814240715,2.9302257735410997,-5.207993602514044],"S":0.7710286927170863,"SSE":591.5128187680539,"AIC":-517.0719241703666,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[11.886259603708057,4.399215897737832,-0.07370084498062306,2.930272039349249,1.4377348523567014e-05,-5.2081105079402565],"S":0.7718057846249362,"SSE":591.5143799962498,"AIC":-513.0692847920031,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[11.423710403123357],"S":10.116525506810229,"SSE":102139.40015328208,"AIC":4628.338548412769,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[7.317905319305385,1.0061553251754978],"S":2.1079102919838917,"SSE":4429.955941654462,"AIC":1492.389638557128,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[8.706318345706181,0.0629317591161727,0.17254013339275384],"S":0.6741199031275211,"SSE":452.6198932174878,"AIC":-786.7025935504522,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[2.769262300789339,3.57054942213492],"S":2.5556709007508003,"SSE":6511.859391685573,"AIC":1877.6250362812484,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[28.192713827874016,-16.213806421461964,5.521301353408295],"S":0.44745593303298603,"SSE":199.4159447583944,"AIC":-1606.362460968303,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[22.84742078778522],"S":10.116525506810229,"SSE":102139.40015328208,"AIC":4628.338548412769,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[121.90031382924269,0.22895345079483187],"S":3.853394027823118,"SSE":14804.099597061882,"AIC":2698.904142214186,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[41.172832440382905,0.18737521391024056],"S":1.4641180907417959,"SSE":2137.2108582864894,"AIC":763.5016417017534,"order":2,"stress_unit":"kPa"}}},"true":{"EF10_0T":{"Ogden_o1":{"parameters":[6.337186072770253,4.617954039140817],"S":1.235920456244694,"SSE":1522.9168760416,"AIC":424.6274933306889,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[10.699769809140538,0.0940905004294706,2.808293272433427,10.757783945647796],"S":0.5255189527951093,"SSE":274.78931889813396,"AIC":-1283.7505880278707,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[96.67211390970743,-0.06715251706566515,10.298263931248876,7.835188517589947e-09,-5.620670699269569,2.962334453099681],"S":0.5369421080125335,"SSE":286.28867956544457,"AIC":-1238.7546081228074,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[10.586016467285976],"S":6.7248471991295125,"SSE":45133.12271193677,"AIC":3811.616405150803,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[6.006942909030512,1.2197594718761076],"S":1.7008771202147532,"SSE":2884.304029135822,"AIC":1063.2836331230096,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[7.8143219151401455,-0.1365451991654139,0.2611496119714821],"S":0.4100157317947774,"SSE":167.44044871793,"AIC":-1781.1275209750145,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[0.6455544448966043,4.263227570866611],"S":2.028639428058358,"SSE":4103.031795285724,"AIC":1415.7261627075582,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[32.72344642982931,-20.96014027035541,7.121535927643644],"S":0.43517111106065987,"SSE":188.6164003181621,"AIC":-1662.0399543547192,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[21.172032933661082],"S":6.7248471991295125,"SSE":45133.12271193677,"AIC":3811.616405150803,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[91.58018119402148,0.2490114278739586],"S":1.441972624341125,"SSE":2073.0471942011836,"AIC":733.0195993311036,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[26.308540810347377,0.24765675807568427],"S":1.11655493341889,"SSE":1242.9548345840358,"AIC":221.4914760550864,"order":2,"stress_unit":"kPa"}},"EF10_12_5T":{"Ogden_o1":{"parameters":[4.254063931089346,4.581803506316309],"S":0.7995928836269318,"SSE":637.4307332081917,"AIC":-446.30966164387854,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[6.850403386386577,-0.04501597044354479,2.9566101620050893,-5.589992993403183],"S":0.3537643499702801,"SSE":124.52346923334537,"AIC":-2075.2610729443995,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[56.51176063521195,-0.12067462578160729,29.9172145995519,0.0004075481336450089,-5.032271601141265,0.5775463724030241],"S":0.4768366704941223,"SSE":225.78159785562474,"AIC":-1476.187128126986,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[6.994038311833878],"S":4.373217360691419,"SSE":19086.780023685118,"AIC":2950.9959500526015,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[4.015197048408218,0.7934945356399402],"S":1.1004395131169695,"SSE":1207.334220663026,"AIC":192.414805742891,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[5.182960264912192,-0.0828256513011929,0.1687310247366656],"S":0.2710276036432549,"SSE":73.16213808885885,"AIC":-2609.0772310524626,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[0.5271882942983315,2.7734780560734786],"S":1.3141370570674988,"SSE":1721.7753361437528,"AIC":547.3559306785293,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[21.346127607478877,-13.596791846413447,4.621962553500355],"S":0.2707307337833167,"SSE":73.00194969399367,"AIC":-2611.2691300535025,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[13.988076624419435],"S":4.373217360691419,"SSE":19086.780023685118,"AIC":2950.9959500526015,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[61.22493143344633,0.24794866077707603],"S":0.9761699914692685,"SSE":950.0491286883764,"AIC":-47.24158131587718,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[17.82695788622973,0.24351890902355985],"S":0.7275370624360201,"SSE":527.7222466863793,"AIC":-635.1851816301007,"order":2,"stress_unit":"kPa"}},"EF10_25T":{"Ogden_o1":{"parameters":[3.2209419626308837,4.514910864951147],"S":0.5569410664697811,"SSE":309.25280146593565,"AIC":-1169.59620884698,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[5.027122551349208,-0.033661128901206434,2.9877334140446337,-5.524193681307009],"S":0.2648937460382666,"SSE":69.81785320673475,"AIC":-2653.8655253182837,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[5.0266075629272455,24.80989533555382,-0.033633163295019974,2.9881189254976666,7.03383882865932e-09,-5.524768260303193],"S":0.2651603795660509,"SSE":69.8178567033709,"AIC":-2649.865475236021,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[5.141845372836509],"S":3.1192384602281877,"SSE":9710.189274623182,"AIC":2275.175774865382,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[3.0144200712138893,0.566692701462318],"S":0.7697159379804797,"SSE":590.6852373056261,"AIC":-522.4719968457728,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[3.8249741981157794,-0.04156382097220063,0.1171158434158561],"S":0.21078501217799306,"SSE":44.25260007344117,"AIC":-3111.8411505325903,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[0.5224694900064234,1.9811338526062856],"S":0.923130130739938,"SSE":849.6127305650953,"AIC":-158.9746444199363,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[15.210225519319692,-9.568079611281805,3.2607876673030853],"S":0.17055072466357624,"SSE":28.971199484537912,"AIC":-3535.4530636901204,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[10.283690751738535],"S":3.1192384602281873,"SSE":9710.18927462318,"AIC":2275.175774865382,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[45.98396915854191,0.24603273788720748],"S":0.7623557545893639,"SSE":579.4427376658518,"AIC":-541.6884344309345,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[13.74999772372048,0.23579508164188712],"S":0.5153086559707406,"SSE":264.746381885616,"AIC":-1324.982960748429,"order":2,"stress_unit":"kPa"}},"EF10_37_5T":{"Ogden_o1":{"parameters":[2.1926383355760444,4.771025967900732],"S":0.40459507185059757,"SSE":163.20608064929286,"AIC":-1808.7415782657542,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.050984433356252815,3.5345258120500582,10.131550159878081,2.991541005367482],"S":0.17380678257520532,"SSE":30.057753680798974,"AIC":-3496.6346253005727,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[89.74241643015645,-0.03129196200188328,3.3682266962454683,2.035624245149554e-08,-5.403474415529156,3.2199253373230023],"S":0.1793052380688442,"SSE":31.925315820132425,"AIC":-3432.355984547628,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[3.917963383774854],"S":2.642858018993583,"SSE":6970.72911154157,"AIC":1943.71982640932,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[2.105697338029348,0.48274218624809495],"S":0.5950633369978123,"SSE":353.0380739138551,"AIC":-1037.1793697522044,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[2.7371730392740363,0.008869805297310376,0.09124104965132622],"S":0.14652462882710096,"SSE":21.383588985508027,"AIC":-3839.1315209854934,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.022121079897077928,1.6898028907755962],"S":0.7253042032727092,"SSE":524.4879887232044,"AIC":-641.3327518404076,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[11.483303645749904,-7.357093925736988,2.5542874761796086],"S":0.1449531639249194,"SSE":20.927374052917173,"AIC":-3860.6972137056246,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[7.835926767549708],"S":2.642858018993583,"SSE":6970.72911154157,"AIC":1943.71982640932,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[32.07639698778549,0.25397741958516834],"S":0.5683822921396596,"SSE":322.0892547278795,"AIC":-1128.9265832514907,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[8.82078502452553,0.2642748067508084],"S":0.3522202027589097,"SSE":123.68689401783288,"AIC":-2086.001954931341,"order":2,"stress_unit":"kPa"}},"EF10_50T":{"Ogden_o1":{"parameters":[1.7024325501123678,4.947939893311707],"S":0.32437936100761317,"SSE":104.90630393816433,"AIC":-2250.68767064609,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[2.550759852189162,-0.031130604972514617,3.416438019655444,-5.2764311691592205],"S":0.15374557748568285,"SSE":23.519514083424074,"AIC":-3741.9248158834903,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.03556180097142895,0.021472519878676363,2.695295899164626,9.736647796661234,9.734393432617406,3.115439610335364],"S":0.14847402164358098,"SSE":21.890223357297423,"AIC":-3809.715163876881,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[3.2886633551430093],"S":2.3736543858717942,"SSE":5622.966673281268,"AIC":1728.859402435177,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[1.6560475286187908,0.43489033999763893],"S":0.5030505295551975,"SSE":252.30065577990734,"AIC":-1373.1338241315773,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[2.1878924097514485,0.035780725580881016,0.07684639598860175],"S":0.13081826491754303,"SSE":17.044964762292324,"AIC":-4065.9004407283865,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.26331640459265276,1.523358327531467],"S":0.6207431326223801,"SSE":384.1660705877523,"AIC":-952.6803443960422,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[9.607627437326391,-6.238324114204804,2.191423706659905],"S":0.11648705507652848,"SSE":13.514957064400573,"AIC":-4297.958276143673,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[6.577326715734516],"S":2.3736543858717942,"SSE":5622.966673281268,"AIC":1728.859402435177,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[25.266157003167486,0.2598699231646832],"S":0.4790306507300383,"SSE":228.78195324582742,"AIC":-1470.985898261175,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[6.621975129190201,0.2838531449631017],"S":0.2736815859312044,"SSE":74.67690564638576,"AIC":-2590.5843960038887,"order":2,"stress_unit":"kPa"}},"EF10_62_5T":{"Ogden_o1":{"parameters":[1.2677408836622572,5.256084290860288],"S":0.2827492181356701,"SSE":79.70727899526375,"AIC":-2525.3943674282646,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[2.070128666973368,0.05727213311711449,3.2075228737338946,9.6796689391095],"S":0.11244097920099651,"SSE":12.579758934660534,"AIC":-4367.66619048005,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[11.0413923292216,1.9465128339936537,-0.030256541242999598,4.1936406286584575e-05,3.5745658729624994,-5.267566439530598],"S":0.11792384553094318,"SSE":13.808691111392106,"AIC":-4270.457094373314,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[2.806194079122207],"S":2.256966367509493,"SSE":5083.709389700858,"AIC":1628.0411899508595,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[1.2520002430895982,0.4139997902375616],"S":0.46610017815794863,"SSE":216.59762795063483,"AIC":-1525.7138957649872,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[1.7511100161178335,0.039456119123989164,0.07211622161554737],"S":0.09720145536570728,"SSE":9.410330433510737,"AIC":-4659.947210856766,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.5766674368243845,1.4508264048338924],"S":0.576955857304004,"SSE":331.87942709356605,"AIC":-1098.9835474332756,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[8.5195078265835,-5.7016416766084825,2.019418296306677],"S":0.13115273899702742,"SSE":17.13223678263671,"AIC":-4060.7933982507016,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[5.612388157797276],"S":2.256966367509493,"SSE":5083.709389700858,"AIC":1628.0411899508595,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[19.255639774916908,0.2707509708800236],"S":0.3713256637677813,"SSE":137.46910032686563,"AIC":-1980.3561120254567,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[4.6857303476585646,0.31856278972232854],"S":0.2173834503522101,"SSE":47.1137977935707,"AIC":-3051.1893740753558,"order":2,"stress_unit":"kPa"}},"EF10_75T":{"Ogden_o1":{"parameters":[0.8623977339496057,5.694651940771826],"S":0.23170679190149443,"SSE":53.5269733010426,"AIC":-2923.569578281846,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.06764793832752039,1.444668559469358,9.370937809531705,3.294902701826895],"S":0.09126821149715666,"SSE":8.28823699774027,"AIC":-4784.917998586652,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[7.364850814946639,1.3434411133533393,-0.03278507390932694,4.925961174040949e-07,3.8244590362160076,-5.159620178556943],"S":0.09726536448298038,"SSE":9.394327270110974,"AIC":-4655.649253777764,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[2.3191701391127184],"S":2.134692834054752,"SSE":4547.79966877318,"AIC":1516.6435267152324,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[0.8471427953117714,0.3921133570039981],"S":0.42692431340639225,"SSE":181.71757626938688,"AIC":-1701.3015759006241,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[1.3069544481871114,0.04705926656099164,0.06643829746847613],"S":0.07678621057502534,"SSE":5.872537645934245,"AIC":-5131.468430905266,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.8862519437364338,1.3747281123402286],"S":0.5312703123175683,"SSE":281.4014003157565,"AIC":-1263.9731580677606,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[7.448158313672391,-5.178753504593366,1.8503019176362552],"S":0.13119701279053864,"SSE":17.143805540500118,"AIC":-4060.118363589836,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[4.6383402795795705],"S":2.134692834054752,"SSE":4547.79966877318,"AIC":1516.6435267152324,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[13.416607761617975,0.28811659430972936],"S":0.2751085374201962,"SSE":75.45765323939506,"AIC":-2580.183664327991,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[3.030670202869238,0.3674594856956532],"S":0.15982439955554967,"SSE":25.467207177212106,"AIC":-3666.3636474669256,"order":2,"stress_unit":"kPa"}},"EF10_87_5T":{"Ogden_o1":{"parameters":[0.8470785739157616,5.378568385261653],"S":0.1482315232961939,"SSE":21.90666674521395,"AIC":-3816.964270895637,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.06142714980802297,1.1945083128234777,8.892627594521533,3.5957013539695164],"S":0.06946205603658955,"SSE":4.800852342686154,"AIC":-5330.961805439277,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.017056646020447003,0.04434228444771764,1.1944750843891616,8.891433373427207,8.893864542634738,3.596012233080382],"S":0.0695319753428378,"SSE":4.800852725911465,"AIC":-5326.961725614848,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[1.9792573227362915],"S":1.6555696532136757,"SSE":2735.429054888766,"AIC":1008.2882992151345,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[0.8318249710486773,0.305646022771307],"S":0.2877371691387287,"SSE":82.54430046845746,"AIC":-2490.4201543859467,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[1.1370802235111575,0.07657705265970831,0.04410557751018512],"S":0.07116724138200813,"SSE":5.044517140941309,"AIC":-5283.453340175076,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.5223508860660097,1.0728749315192292],"S":0.370478937185703,"SSE":136.84287896955334,"AIC":-1984.9218801467136,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[5.370128708025857,-3.5604732858546013,1.3081720154191168],"S":0.06913984835037873,"SSE":4.761197355393714,"AIC":-5341.256097120231,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[3.958514644904188],"S":1.6555696532136757,"SSE":2735.429054888766,"AIC":1008.2882992151345,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[12.878894918577751,0.2759632033772664],"S":0.30672626641118683,"SSE":93.7987594990267,"AIC":-2362.60364801448,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[3.09819502254697,0.3311299614251132],"S":0.11110519675412266,"SSE":12.307331651534989,"AIC":-4393.56012495198,"order":2,"stress_unit":"kPa"}},"EF10_100T":{"Ogden_o1":{"parameters":[0.6422410855331973,5.458698625052777],"S":0.1276579068791835,"SSE":16.247651565207963,"AIC":-4115.806899714402,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.04827818029337125,0.9782664928437024,9.055262544635232,3.401277484708917],"S":0.04506692762745809,"SSE":2.020872825949653,"AIC":-6196.225768839629,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[4.148298238155838e-05,0.048202763730335316,0.9780864544274535,6.450842174064832,9.05708499501907,3.4023250532662033],"S":0.04511273441352221,"SSE":2.020912694621136,"AIC":-6192.206040592655,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[1.555026875497779],"S":1.3334612398591366,"SSE":1774.5626404502525,"AIC":575.5539928196376,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[0.6321678181321698,0.24582741701619973],"S":0.24224300507967733,"SSE":58.505628489502485,"AIC":-2834.632315876779,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[0.8934094599661324,0.04978556662680657,0.037746726514090306],"S":0.04184352820770315,"SSE":1.7438773294573742,"AIC":-6345.644294583117,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[-0.45658325551912665,0.8627302908287358],"S":0.307525923261192,"SSE":94.28847689721562,"AIC":-2357.396293021214,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[4.361533908627721,-2.9258324790451993,1.0696578167761341],"S":0.07748653306340755,"SSE":5.9801461549618065,"AIC":-5113.3102706892,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[3.1100537459935254],"S":1.3334612398591366,"SSE":1774.5626404502525,"AIC":575.5539928196376,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[9.826050944125281,0.27894509511845905],"S":0.2219137301904574,"SSE":49.097966536102,"AIC":-3009.9376597826163,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[2.3208803198058674,0.34051497608964576],"S":0.08595240616837393,"SSE":7.365652677754726,"AIC":-4906.927614154216,"order":2,"stress_unit":"kPa"}},"EF30_0T":{"Ogden_o1":{"parameters":[14.749746251320637,3.8886660160504114],"S":1.7669668811361312,"SSE":3112.805443154851,"AIC":1139.524391322906,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.08044277776819825,22.508236548239946,11.263965507384597,2.575025673898668],"S":0.9443560486448422,"SSE":887.3493048790392,"AIC":-111.51656936915553,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[22.508000493207927,8.999388991924288,0.08043565574361422,2.575058856253897,4.5026953435042314e-08,11.26409099079013],"S":0.9453065878831787,"SSE":887.3493132796705,"AIC":-107.51655990204803,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[17.873200549138353],"S":7.8555344945024554,"SSE":61586.00334992931,"AIC":4122.434626376172,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[12.578408162078237,1.4104024519219243],"S":2.2611710968387992,"SSE":5097.556044991641,"AIC":1632.7612180095919,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[14.913876849080609,-0.34218468503333815,0.33744990371825456],"S":0.750546541970458,"SSE":561.0668312171572,"AIC":-571.9152518253688,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[6.404471256392487,4.918652864356932],"S":2.6439371324823533,"SSE":6969.432349837452,"AIC":1945.5337795387077,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[48.58373637433356,-28.247573370098877,9.364105794774895],"S":0.4498005973547881,"SSE":201.51129507120132,"AIC":-1595.909844222492,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[35.746401098276706],"S":7.8555344945024554,"SSE":61586.00334992931,"AIC":4122.434626376172,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[194.27781415941138,0.22942920903949382],"S":3.1113927820929397,"SSE":9651.722749326664,"AIC":2271.1364226638025,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[77.6588945275716,0.16673322277226996],"S":1.8142132012297572,"SSE":3281.495430897774,"AIC":1192.2992425484597,"order":2,"stress_unit":"kPa"}},"EF30_12_5T":{"Ogden_o1":{"parameters":[11.667744276376565,3.3916217560516224],"S":1.1618270346566641,"SSE":1345.7925322837202,"AIC":300.98308285173687,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[17.345068258013846,-0.015966606518299193,2.3006423491745833,-6.424056828557822],"S":0.7264552561508646,"SSE":525.0985529932722,"AIC":-636.1693140205203,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[99.84305462098781,-0.01595831755206201,17.3442041095496,9.89532457861037e-07,-6.424455104708592,2.30076788215127],"S":0.7271875312493156,"SSE":525.1000936652431,"AIC":-632.1663799623288,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[11.3404031638686],"S":3.5840382195837077,"SSE":12819.63929951788,"AIC":2552.9783153336703,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[9.014525356154646,0.6195601467653343],"S":1.3875333759123893,"SSE":1919.4731226630192,"AIC":656.0507331012503,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[10.418143790753454,-0.4337519868977748,0.2028099296025521],"S":0.5310572537392947,"SSE":280.89371952212514,"AIC":-1263.7789035336928,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[6.33414847296928,2.1470634742413335],"S":1.5556833053969261,"SSE":2412.8900950506336,"AIC":884.825238589698,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[31.206429238190275,-17.410414591072676,5.521835145515796],"S":0.24440099961563078,"SSE":59.49292121866708,"AIC":-2815.8979446230164,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[22.6808063240604],"S":3.5840382195837073,"SSE":12819.639299517878,"AIC":2552.9783153336703,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[141.55135487084328,0.21848203222754456],"S":2.077461400019315,"SSE":4302.898330964501,"AIC":1463.288826099872,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[79.40227000125643,0.11465425185602116],"S":1.2532792225337936,"SSE":1565.9966832060054,"AIC":452.52247956254047,"order":2,"stress_unit":"kPa"}},"EF30_25T":{"Ogden_o1":{"parameters":[7.68980678555997,3.8608656911429806],"S":0.7626765655823872,"SSE":579.9305170574796,"AIC":-540.846980794806,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[10.795501956500225,-0.04074400579248385,2.7753130412970406,-5.510659414359528],"S":0.440040047423723,"SSE":192.66706711998904,"AIC":-1638.7916205025774,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[20.912729685847008,-0.15994690240011322,-0.011184364714250942,1.3013077744076824,-4.7335579300727115,-0.24674675775050628],"S":0.528114542617245,"SSE":276.95263533295514,"AIC":-1271.9087789933044,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[9.20454887762103],"S":3.9488900736984083,"SSE":15562.545348525511,"AIC":2746.8670881821595,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[6.517692438535729,0.7157192228742809],"S":1.0097038239862117,"SSE":1016.4433067358615,"AIC":20.309579521410182,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[7.544314671706808,-0.05468796215575346,0.1483385664351642],"S":0.3747399347484967,"SSE":139.86829862052633,"AIC":-1961.054023270581,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[3.373059013379748,2.5009913175861818],"S":1.2027220422697829,"SSE":1442.2006900287126,"AIC":370.17020395603964,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[22.449825775742898,-12.499384566203712,4.23519050054726],"S":0.24095446058048037,"SSE":57.82681586533574,"AIC":-2844.3026685849154,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[18.409097755242673],"S":3.9488900736984083,"SSE":15562.545348525513,"AIC":2746.8670881821595,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[100.61563093714086,0.22893068120437837],"S":1.7692416634760795,"SSE":3120.825415588266,"AIC":1142.09752311084,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[41.09943248934336,0.16334948078479772],"S":0.7932209387705266,"SSE":627.3118593308834,"AIC":-462.31147870044634,"order":2,"stress_unit":"kPa"}},"EF30_37_5T":{"Ogden_o1":{"parameters":[6.081790370356259,3.567953932953133],"S":0.5707377009779856,"SSE":324.76429874768354,"AIC":-1120.655594384759,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[8.862817486132203,-0.016143669488834535,2.468565436241129,-5.94776368099976],"S":0.3219607637478841,"SSE":103.14043972615526,"AIC":-2263.6637269773396,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[83.47125651838229,-0.029491058041661068,62.44670945885901,0.00031085060569858275,-5.73630279127965,0.303572935872595],"S":0.47185664311815223,"SSE":221.09015081314817,"AIC":-1497.1847384105988,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[6.394470810010693],"S":2.271951378057395,"SSE":5151.439538128384,"AIC":1641.2761975833348,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[4.8758018891528625,0.4045383364533411],"S":0.7112097540745553,"SSE":504.301856347917,"AIC":-680.580268867333,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[5.606710378607996,-0.14395458839106165,0.1056095414867063],"S":0.24540425115869482,"SSE":59.98235350081273,"AIC":-2807.704868338158,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[3.1093803286018526,1.4088971139775308],"S":0.8199782575196728,"SSE":670.3472497765838,"AIC":-395.95941761086704,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[16.090503204380063,-8.798371244821274,2.8819082517570567],"S":0.1714746609932539,"SSE":29.28594512530034,"AIC":-3524.647566602779,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[12.788941618056683],"S":2.271951378057395,"SSE":5151.439538128384,"AIC":1641.2761975833348,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[76.00201149923976,0.22225686704107853],"S":1.2213523338529786,"SSE":1487.2264188378936,"AIC":400.9129214132914,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[37.355227269170555,0.1326569145642034],"S":0.6086709612061253,"SSE":369.3688979985417,"AIC":-991.9594107591302,"order":2,"stress_unit":"kPa"}},"EF30_50T":{"Ogden_o1":{"parameters":[4.3661826793673,4.0942172553277345],"S":0.4672894099641774,"SSE":217.70431448667503,"AIC":-1520.6174924415789,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[6.082481391888234,-0.031065563403661192,2.9785734516152047,-5.411372462846032],"S":0.24496291966588774,"SSE":59.70679785117999,"AIC":-2810.3093982119826,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[133.2147485905258,-0.03104064595132318,6.082081361162813,5.829810637597241e-09,-5.411923644650771,2.9788260352454485],"S":0.24520949747447057,"SSE":59.706803768120615,"AIC":-2806.3092991120384,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[5.792324172840076],"S":2.839182354220504,"SSE":8044.83452763605,"AIC":2087.030211884282,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[3.8472507875596547,0.5181226409467532],"S":0.6503913408473609,"SSE":421.7398695604803,"AIC":-859.366577855261,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[4.519797515523918,0.013425914217620127,0.09717680485110226],"S":0.2138379556659743,"SSE":45.543764598269576,"AIC":-3083.0815560128485,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[1.564888271825152,1.813046649179204],"S":0.7912258361880986,"SSE":624.1602088800012,"AIC":-467.3481985660648,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[14.19402441846756,-8.11744755456027,2.803763768366335],"S":0.13233195389158225,"SSE":17.4416990366808,"AIC":-4042.891443418474,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[11.584648346011656],"S":2.839182354220504,"SSE":8044.834527636051,"AIC":2087.030211884282,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[59.01532656984702,0.23473699569509549],"S":1.0797649626246502,"SSE":1162.3946973882767,"AIC":154.48227148469135,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[21.311290158857506,0.18853543804127548],"S":0.4676106604473798,"SSE":218.00375057474264,"AIC":-1519.2430118697466,"order":2,"stress_unit":"kPa"}},"EF50_0T":{"Ogden_o1":{"parameters":[23.855354878374964,3.789570371155231],"S":2.8441620593599857,"SSE":8064.990046443125,"AIC":2091.532477409408,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.09550447127669462,36.93046305356542,11.688280418829937,2.477760948023502],"S":1.5124530519634958,"SSE":2276.0766632217246,"AIC":830.4531990104016,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[0.09550265642624867,19.36734747968778,17.5629762702825,11.688304475212323,2.477770488155337,2.4777724668076084],"S":1.513975400689746,"SSE":2276.076663296421,"AIC":834.4531990432198,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[27.6693818409313],"S":11.478498012488059,"SSE":131492.4047894469,"AIC":4880.94909169459,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[19.98733047997658,2.046336571554874],"S":3.5528059877583336,"SSE":12584.563095491514,"AIC":2536.4709116947474,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[23.665169873828525,-0.7136314893762252,0.5314218860270702],"S":1.1575599419213447,"SSE":1334.5852390643831,"AIC":294.62056123167685,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[11.049096818400873,7.128068122310119],"S":4.10412024332654,"SSE":16793.27156276765,"AIC":2824.978303970569,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[76.13475997936318,-44.04987880922719,14.449536495171458],"S":0.8253647254229268,"SSE":678.5020222525736,"AIC":-381.8678192362332,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[55.33876368023467],"S":11.478498012488059,"SSE":131492.4047894469,"AIC":4880.94909169459,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[309.6717755248557,0.22707133495557735],"S":4.7819495646756875,"SSE":22798.44051418469,"AIC":3130.6921351204396,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[131.0025939523826,0.1562344853664468],"S":2.939795300716937,"SSE":8616.469220887033,"AIC":2157.6753976199634,"order":2,"stress_unit":"kPa"}},"EF50_12_5T":{"Ogden_o1":{"parameters":[18.03518222611388,3.6242072157094283],"S":1.7955947346048464,"SSE":3214.487969587827,"AIC":1171.6680820472059,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.06797993836843796,26.379500561329625,11.389849828602326,2.4875818700176615],"S":1.1104345195939278,"SSE":1226.8994981942683,"AIC":212.49025381195634,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[26.379365900132118,10.064907279370438,0.0679767930628779,2.487587230030458,2.230116377971063e-05,11.389927665595367],"S":1.1115544928829288,"SSE":1226.9045169136878,"AIC":216.4943443745186,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[19.44183958042291],"S":7.200579312659764,"SSE":51744.64575302796,"AIC":3948.320963083135,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[14.626471312042638,1.2827077713101642],"S":2.244608406837281,"SSE":5023.152099344465,"AIC":1618.0576448876934,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[16.874416282544143,-0.40421552032741365,0.3248097728527976],"S":0.9075477940947017,"SSE":820.3484265718944,"AIC":-192.0261185191911,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[9.025317429753152,4.4674057806192025],"S":2.5905505771861757,"SSE":6690.819436080749,"AIC":1904.736353347885,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[50.14498097341059,-27.865665970245587,9.128886799188916],"S":0.5091644451965058,"SSE":258.2114385232565,"AIC":-1347.9765005312724,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[38.883679159420666],"S":7.200579312659764,"SSE":51744.64575302796,"AIC":3948.320963083135,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[227.65554486871582,0.2234354941890034],"S":3.692663781728861,"SSE":13594.858507477415,"AIC":2613.691670341963,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[107.58467168397407,0.13845520351813181],"S":1.917101968346697,"SSE":3664.2541171676635,"AIC":1302.6247995291076,"order":2,"stress_unit":"kPa"}},"EF50_25T":{"Ogden_o1":{"parameters":[14.448500661116228,3.573119339973451],"S":1.3831017429556371,"SSE":1907.2315200728208,"AIC":649.6527246361458,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[22.28158393176258,0.04405991611325976,2.3285889868507255,11.817373493983084],"S":0.6481398917885541,"SSE":417.9848927310403,"AIC":-864.3099889022807,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[22.28097665654259,9.74491580738479,0.04405276467145593,2.32865690514866,8.058261551538784e-06,11.81759901731123],"S":0.6487930511351993,"SSE":417.985896238912,"AIC":-860.3075880818574,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[15.226352948604593],"S":5.43273084640957,"SSE":29455.53532063099,"AIC":3384.8818489939035,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[11.596300623618225,0.9669584768707286],"S":1.7067104144009135,"SSE":2904.1218573086644,"AIC":1070.1310579653234,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[13.401410441582945,-0.38763823817657705,0.2608197778496458],"S":0.4414064524639499,"SSE":194.060297651702,"AIC":-1633.5863555734113,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[7.3720033238848,3.368538050844953],"S":1.96238420618072,"SSE":3839.398917349532,"AIC":1349.3158224070069,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[37.99003618971572,-20.706907147529613,6.797427940541015],"S":0.5238051205536666,"SSE":273.27431710096823,"AIC":-1291.2791637497635,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[30.452705893230437],"S":5.43273084640957,"SSE":29455.535320630985,"AIC":3384.881848993903,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[180.68250603319575,0.2223879326002486],"S":2.854526469727298,"SSE":8123.876402274669,"AIC":2098.8074297021926,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[88.36201569435968,0.13335447093046945],"S":1.4507771278421266,"SSE":2098.4400118458407,"AIC":745.1942171765014,"order":2,"stress_unit":"kPa"}},"EF50_37_5T":{"Ogden_o1":{"parameters":[10.638667104460875,4.053817864841132],"S":1.1491881480800112,"SSE":1316.671499488503,"AIC":279.1069607357819,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[0.11243693399807991,15.655515618687533,10.290560513603102,2.751704941969129],"S":0.568009935813886,"SSE":321.02211074737846,"AIC":-1128.2452773913421,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[10.61076088889412,5.044357644205584,0.11241324339206038,2.75177932055759,2.7518310338435987,10.290839828704378],"S":0.5685816623629166,"SSE":321.02211102795013,"AIC":-1124.2452765173473,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[13.864855008187426],"S":6.650786718013291,"SSE":44144.49804056499,"AIC":3789.4682995915377,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[9.316290755978036,1.2116370725937977],"S":1.5698139214584408,"SSE":2456.922800760714,"AIC":902.9096729236102,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[10.950450827990862,-0.014684178801433884,0.23612284522761331],"S":0.48664760073609464,"SSE":235.87858375298856,"AIC":-1438.4380819674489,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[3.981472170163656,4.238754634185565],"S":1.8961277209036334,"SSE":3584.5144329772693,"AIC":1280.6230207993412,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[34.0173518171712,-19.37895340432403,6.668199457485227],"S":0.3914476170960899,"SSE":152.61831198248615,"AIC":-1873.8151674459602,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[27.729710006007178],"S":6.650786718013291,"SSE":44144.49804056499,"AIC":3789.4682995915377,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[143.04499206004434,0.23369354863335431],"S":2.5695849699041435,"SSE":6582.958616804607,"AIC":1888.4842820926865,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[52.65287707300779,0.18423576043978065],"S":1.1461614412375216,"SSE":1309.7449912315335,"AIC":273.8324550816883,"order":2,"stress_unit":"kPa"}},"EF50_50T":{"Ogden_o1":{"parameters":[8.645005276139932,4.023055414767535],"S":0.9121695475038012,"SSE":829.5571235431095,"AIC":-182.86330669185185,"order":1,"stress_unit":"kPa"},"Ogden_o2":{"parameters":[12.244822838331547,-0.05769743539194829,2.8748460429727913,-5.444395444184245],"S":0.4651319455444598,"SSE":215.26598813214446,"AIC":-1527.8808613960236,"order":2,"stress_unit":"kPa"},"Ogden_o3":{"parameters":[9.387460072386231,3.255182971363387,0.08628817722670375,2.7485747461367045,2.7485902694182185,10.325549400024101],"S":0.4571495216651221,"SSE":207.52278536253942,"AIC":-1560.5141363638547,"order":3,"stress_unit":"kPa"},"Yeoh_o1":{"parameters":[11.114976230127064],"S":5.2398403691466875,"SSE":27401.01523995101,"AIC":3312.580065260552,"order":1,"stress_unit":"kPa"},"Yeoh_o2":{"parameters":[7.5325962372292805,0.9542705263190213],"S":1.243942270344721,"SSE":1542.7501948345275,"AIC":437.56666450943953,"order":2,"stress_unit":"kPa"},"Yeoh_o3":{"parameters":[8.825115776945736,-0.01567738458193611,0.18675996810813014],"S":0.39233153750456556,"SSE":153.30833917941357,"AIC":-1869.304096805573,"order":3,"stress_unit":"kPa"},"Mooney Rivlin_o1":{"parameters":[3.331856781829529,3.3380056887522334],"S":1.5015766435447362,"SSE":2247.968219189758,"AIC":814.0267945604071,"order":1,"stress_unit":"kPa"},"Mooney Rivlin_o2":{"parameters":[27.166477123809358,-15.403555276193341,5.291475797891966],"S":0.29528552085986326,"SSE":86.84476467416283,"AIC":-2437.633068202179,"order":2,"stress_unit":"kPa"},"Neo Hookean":{"parameters":[22.229952461058378],"S":5.2398403691466875,"SSE":27401.01523995101,"AIC":3312.580065260552,"order":1,"stress_unit":"kPa"},"Veronda Westmann":{"parameters":[115.74675570394105,0.23291779839082893],"S":2.075642127418678,"SSE":4295.365370391791,"AIC":1461.5366205938126,"order":2,"stress_unit":"kPa"},"Humphrey":{"parameters":[43.28510456275039,0.18087169801287606],"S":0.9169025931225346,"SSE":838.1882341790039,"AIC":-172.51258059874806,"order":2,"stress_unit":"kPa"}}}};
+
+// Key map: phantom label → JSON key (dots to underscores)
+function phantomKey(label) {
+  return label.replace(/\./g, '_');
+}
+
+var MODEL_DISPLAY = {
+  'Ogden_o1':       'Ogden (1st)',
+  'Ogden_o2':       'Ogden (2nd)',
+  'Ogden_o3':       'Ogden (3rd)',
+  'Yeoh_o1':        'Yeoh (1st)',
+  'Yeoh_o2':        'Yeoh (2nd)',
+  'Yeoh_o3':        'Yeoh (3rd)',
+  'Mooney Rivlin_o1': 'Mooney-Rivlin (2T)',
+  'Mooney Rivlin_o2': 'Mooney-Rivlin (3T)',
+  'Neo Hookean':    'Neo-Hookean',
+  'Veronda Westmann': 'Veronda-Westmann',
+  'Humphrey':       'Humphrey',
+};
+
+var MODEL_PARAM_NAMES = {
+  'Ogden_o1':       ['μ₁','α₁'],
+  'Ogden_o2':       ['μ₁','α₁','μ₂','α₂'],
+  'Ogden_o3':       ['μ₁','α₁','μ₂','α₂','μ₃','α₃'],
+  'Yeoh_o1':        ['C₁₀'],
+  'Yeoh_o2':        ['C₁₀','C₂₀'],
+  'Yeoh_o3':        ['C₁₀','C₂₀','C₃₀'],
+  'Mooney Rivlin_o1': ['C₁₀','C₀₁'],
+  'Mooney Rivlin_o2': ['C₁₀','C₀₁','C₁₁'],
+  'Neo Hookean':    ['C₁₀'],
+  'Veronda Westmann': ['c₁','c₂'],
+  'Humphrey':       ['c₁','c₂'],
+};
+
+var currentStressType = 'engineering';
+
+function fmtParam(v) {
+  if (Math.abs(v) < 0.001 || Math.abs(v) >= 10000) return v.toExponential(3);
+  return v.toFixed(4);
+}
+
+function renderHyperPanel(label) {
+  var panel = document.getElementById('hyper-panel');
+  if (!panel) return;
+
+  var key = phantomKey(label);
+  var stressData = HYPER_DATA[currentStressType];
+  if (!stressData || !stressData[key]) {
+    panel.classList.remove('vis');
+    return;
+  }
+
+  var models = stressData[key];
+
+  // Model families — pick best order within each family by lowest AIC
+  var FAMILIES = {
+    'Ogden':          ['Ogden_o1','Ogden_o2','Ogden_o3'],
+    'Yeoh':           ['Yeoh_o1','Yeoh_o2','Yeoh_o3'],
+    'Mooney-Rivlin':  ['Mooney Rivlin_o1','Mooney Rivlin_o2'],
+    'Neo-Hookean':    ['Neo Hookean'],
+    'Veronda-Westmann': ['Veronda Westmann'],
+    'Humphrey':       ['Humphrey'],
+  };
+
+  var FAMILY_DISPLAY = {
+    'Ogden':           'Ogden',
+    'Yeoh':            'Yeoh',
+    'Mooney-Rivlin':   'Mooney-Rivlin',
+    'Neo-Hookean':     'Neo-Hookean',
+    'Veronda-Westmann':'Veronda-Westmann',
+    'Humphrey':        'Humphrey',
+  };
+
+  // For each family, pick the variant with lowest AIC
+  var familyBest = {};
+  Object.keys(FAMILIES).forEach(function(fam) {
+    var variants = FAMILIES[fam];
+    var bestKey = null, bestAIC = Infinity;
+    variants.forEach(function(v) {
+      if (models[v] && models[v].AIC < bestAIC) {
+        bestAIC = models[v].AIC;
+        bestKey = v;
+      }
+    });
+    if (bestKey) familyBest[fam] = { key: bestKey, data: models[bestKey] };
+  });
+
+  // Sort families by AIC ascending → overall best is first
+  var sortedFams = Object.keys(familyBest).sort(function(a, b) {
+    return familyBest[a].data.AIC - familyBest[b].data.AIC;
+  });
+
+  var overallBestFam = sortedFams[0];
+  var overallBest    = familyBest[overallBestFam];
+  var bestParamNames = MODEL_PARAM_NAMES[overallBest.key] || [];
+  var bestChips = overallBest.data.parameters.map(function(v, i) {
+    return '<span class="hyper-param-chip">' + (bestParamNames[i] || 'p'+(i+1)) + ' = ' + fmtParam(v) + ' kPa</span>';
+  }).join('');
+
+  // Build the 6-row table
+  var rowsHTML = sortedFams.map(function(fam) {
+    var entry = familyBest[fam];
+    var md    = entry.data;
+    var mkey  = entry.key;
+    var pnames = MODEL_PARAM_NAMES[mkey] || [];
+    // Show the order suffix only for multi-order families
+    var orderLabel = '';
+    if (fam === 'Ogden' || fam === 'Yeoh') {
+      orderLabel = ' (order ' + md.order + ')';
+    } else if (fam === 'Mooney-Rivlin') {
+      orderLabel = ' (' + md.parameters.length + '-term)';
+    }
+    var chips = md.parameters.map(function(v, i) {
+      return '<span class="hyper-model-chip">' + (pnames[i] || 'p'+(i+1)) + '=' + fmtParam(v) + '</span>';
+    }).join('');
+    var isBest = (fam === overallBestFam);
+    return '<div class="hyper-model-row' + (isBest ? ' best' : '') + '">' +
+      '<div class="hyper-model-name">' + FAMILY_DISPLAY[fam] + orderLabel + (isBest ? ' ★' : '') + '</div>' +
+      '<div class="hyper-model-params">' + chips + '</div>' +
+      '<div class="hyper-model-s">S = ' + md.S.toFixed(4) + '</div>' +
+      '<div class="hyper-model-aic">AIC = ' + md.AIC.toFixed(1) + '</div>' +
+    '</div>';
+  }).join('');
+
+  // Update best-fit highlight section
+  var orderSuffix = '';
+  if (overallBestFam === 'Ogden' || overallBestFam === 'Yeoh') {
+    orderSuffix = ' (order ' + overallBest.data.order + ')';
+  } else if (overallBestFam === 'Mooney-Rivlin') {
+    orderSuffix = ' (' + overallBest.data.parameters.length + '-term)';
+  }
+
+  document.getElementById('hyper-best-name').textContent = FAMILY_DISPLAY[overallBestFam] + orderSuffix;
+  document.getElementById('hyper-best-chips').innerHTML = bestChips;
+  document.getElementById('hyper-best-s').innerHTML   = 'S = <span>' + overallBest.data.S.toFixed(4) + '</span>';
+  document.getElementById('hyper-best-aic').innerHTML = 'AIC = <span>' + overallBest.data.AIC.toFixed(1) + '</span>';
+  document.getElementById('hyper-rows').innerHTML =
+    '<div class="hyper-col-headers"><div>Model</div><div>Parameters (kPa)</div><div>S</div><div>AIC</div></div>' +
+    rowsHTML;
+
+  panel.classList.add('vis');
+}
+
+function setStressType(t) {
+  currentStressType = t;
+  document.getElementById('btn-eng').classList.toggle('active', t === 'engineering');
+  document.getElementById('btn-true').classList.toggle('active', t === 'true');
+  // Re-render for current phantom if one is selected
+  var sel = document.querySelector('.pc.sel');
+  if (sel) renderHyperPanel(sel.getAttribute('data-phantom'));
+}
+
+function selectPhantom(label) {
+  document.querySelectorAll('.pc').forEach(function(el) { el.classList.remove('sel'); });
+  document.querySelectorAll('.pl-item').forEach(function(el) { el.classList.remove('sel'); });
+  var pc = document.getElementById('pc-' + label);
+  var pl = document.getElementById('pl-' + label);
+  if (pc) pc.classList.add('sel');
+  if (pl) pl.classList.add('sel');
+
+  var p = null;
+  for (var i = 0; i < PHANTOMS.length; i++) { if (PHANTOMS[i].label === label) { p = PHANTOMS[i]; break; } }
+  if (!p) return;
+
+  var rows = [
+    ['Silicone family', p.material],
+    ['Part A',          '50 parts by weight'],
+    ['Part B',          '50 parts by weight'],
+    ['Thinner',         p.thinner + ' of total A+B weight'],
+    ['Target modulus',  p.modulus.toFixed(2) + ' ± ' + p.sd + ' kPa'],
+    ['Cure condition',  'Room temperature'],
+  ];
+
+  document.getElementById('recipe-title').textContent = 'Fabrication recipe — ' + label;
+  document.getElementById('recipe-rows').innerHTML = rows.map(function(r) {
+    return '<div class="rrow"><span class="rkey">' + r[0] + '</span><span class="rval">' + r[1] + '</span></div>';
+  }).join('');
+  document.getElementById('recipe').classList.add('vis');
+
+  // Render hyperelastic parameters
+  renderHyperPanel(label);
+
+  setTimeout(function() {
+    document.getElementById('recipe').scrollIntoView({ behavior:'smooth', block:'nearest' });
+  }, 50);
+}
+
+document.querySelectorAll('.organ-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var organ = btn.getAttribute('data-organ');
+    if (organ) selectOrgan(organ);
+  });
+});
+</script>
+</body>
+</html>
