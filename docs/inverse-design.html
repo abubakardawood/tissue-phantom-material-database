@@ -1,1 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inverse Design — Silicone Tissue Phantoms</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  :root {
+    --bg: #f7f6f3;
+    --surface: #ffffff;
+    --surface2: #f0eeea;
+    --border: rgba(0,0,0,0.10);
+    --border-strong: rgba(0,0,0,0.18);
+    --text: #0b0b0b;
+    --text-sec: #52514e;
+    --text-muted: #898781;
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --accent-text: #0c447c;
+    --success-bg: #eaf3de;
+    --success-text: #3b6d11;
+    --warn-bg: #faeeda;
+    --warn-text: #854f0b;
+    --danger-bg: #fcebeb;
+    --danger-text: #a32d2d;
+    --radius: 8px;
+    --ef10: #2a78d6;
+    --ef30: #1baf7a;
+    --ef50: #eda100;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #111110;
+      --surface: #1e1e1c;
+      --surface2: #2a2a28;
+      --border: rgba(255,255,255,0.10);
+      --border-strong: rgba(255,255,255,0.18);
+      --text: #f5f4f0;
+      --text-sec: #c3c2b7;
+      --text-muted: #898781;
+      --accent: #3987e5;
+      --accent-bg: #042c53;
+      --accent-text: #85b7eb;
+      --success-bg: #173404;
+      --success-text: #c0dd97;
+      --warn-bg: #412402;
+      --warn-text: #fac775;
+      --danger-bg: #501313;
+      --danger-text: #f7c1c1;
+    }
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border-strong);
+    padding: 1.25rem 2rem;
+  }
+  header h1 {
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+  }
+  header p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 1.5rem;
+    padding: 1.5rem 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  @media (max-width: 780px) {
+    .layout { grid-template-columns: 1fr; padding: 1rem; }
+    header { padding: 1rem; }
+  }
+  .panel {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+  }
+  .panel h2 {
+    font-size: 13px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+  label {
+    display: block;
+    font-size: 13px;
+    color: var(--text-sec);
+    margin-bottom: 4px;
+    margin-top: 1rem;
+  }
+  label:first-of-type { margin-top: 0; }
+  input[type=number], select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+  }
+  input[type=number]:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(24,95,165,0.15);
+  }
+  .fam-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 4px;
+  }
+  .fam-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 0.5px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-sec);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .fam-btn:hover { background: var(--surface2); }
+  .fam-btn.active-ef10 { background: #e6f1fb; color: #0c447c; border-color: #2a78d6; }
+  .fam-btn.active-ef30 { background: #e1f5ee; color: #085041; border-color: #1baf7a; }
+  .fam-btn.active-ef50 { background: #faeeda; color: #633806; border-color: #eda100; }
+  @media (prefers-color-scheme: dark) {
+    .fam-btn.active-ef10 { background: #042c53; color: #85b7eb; border-color: #2a78d6; }
+    .fam-btn.active-ef30 { background: #04342c; color: #9fe1cb; border-color: #1baf7a; }
+    .fam-btn.active-ef50 { background: #412402; color: #fac775; border-color: #eda100; }
+  }
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    margin: 0.75rem 0 0.5rem;
+  }
+  .badge-ok { background: var(--success-bg); color: var(--success-text); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn-text); }
+  .badge-err { background: var(--danger-bg); color: var(--danger-text); }
+  .result-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 0.75rem;
+  }
+  .metric {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .metric .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 2px;
+  }
+  .metric .value {
+    font-size: 20px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+  .metric .unit {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 2px;
+  }
+  .metric.span2 { grid-column: 1/-1; }
+  .recipe-box {
+    margin-top: 0.75rem;
+    background: var(--accent-bg);
+    border: 0.5px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .recipe-box .recipe-title {
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-text);
+    margin-bottom: 8px;
+  }
+  .recipe-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 0.5px solid var(--border);
+    font-size: 13px;
+  }
+  .recipe-row:last-child { border-bottom: none; }
+  .recipe-row .comp { color: var(--text-sec); }
+  .recipe-row .mass { font-weight: 500; color: var(--text); font-size: 14px; }
+  .total-row {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 0.5px solid var(--border-strong);
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .divider { height: 0.5px; background: var(--border); margin: 1rem 0; }
+  .bounds-list { margin-top: 0.5rem; }
+  .bound-item {
+    background: var(--surface2);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .bound-item .bi-label { font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
+  .bound-item .bi-phantom { color: var(--text); }
+  .chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 380px;
+  }
+  .chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text-sec);
+  }
+  .chart-legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .chart-legend .swatch {
+    width: 12px;
+    height: 4px;
+    border-radius: 2px;
+  }
+  .chart-legend .swatch-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+  }
+  .info-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    line-height: 1.5;
+  }
+  .vol-section {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 0.5px solid var(--border);
+  }
+  .section-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-sec);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .tag {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: var(--accent-bg);
+    color: var(--accent-text);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .hidden { display: none; }
+  .pot-life-bar {
+    margin-top: 6px;
+    background: var(--surface2);
+    border-radius: 4px;
+    height: 6px;
+    overflow: hidden;
+  }
+  .pot-life-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s;
+  }
+</style>
+</head>
+<body>
 
+<header>
+  <h1>Inverse Design — Silicone Tissue Phantoms</h1>
+  <p>Enter a target Young's modulus to receive a validated Ecoflex fabrication recipe and mass breakdown.</p>
+</header>
+
+<div class="layout">
+  <!-- LEFT PANEL -->
+  <div>
+    <div class="panel">
+      <h2>Target stiffness</h2>
+
+      <label for="e-target">Young's modulus (kPa)</label>
+      <input type="number" id="e-target" min="0" step="0.5" value="50">
+
+      <div id="family-section" class="hidden">
+        <label>Ecoflex family <span style="font-size:11px;color:var(--text-muted)">(overlap — choose one)</span></label>
+        <div class="fam-selector" id="fam-selector"></div>
+      </div>
+
+      <div id="status-area"></div>
+
+      <!-- VOLUME CALCULATOR -->
+      <div class="vol-section" id="vol-section" style="display:none">
+        <div class="section-label">
+          Mould volume calculator
+          <span class="tag">new</span>
+        </div>
+
+        <label for="vol-input">Mould volume (mm³)</label>
+        <input type="number" id="vol-input" min="1" step="500" value="100000"
+               placeholder="e.g. 100000">
+
+        <div class="info-note" style="margin-top:6px">
+          1 mL = 1,000 mm³. A 10% overpour is automatically added to account for mould fill losses and material left in the mixing cup.
+        </div>
+
+        <div id="recipe-area" style="margin-top:0.75rem"></div>
+      </div>
+
+    </div>
+
+    <!-- CURE NOTE -->
+    <div class="panel" style="margin-top:1rem; background: var(--warn-bg); border-color: var(--warn-text);">
+      <div style="display:flex; gap:8px; align-items:flex-start;">
+        <span style="font-size:16px; margin-top:1px">&#9432;</span>
+        <div style="font-size:12px; color: var(--warn-text); line-height:1.6">
+          <strong style="font-weight:500">Effect of thinner on cure time.</strong>
+          Silicone Thinner prolongs both pot life and cure time in proportion to the amount added.
+          The values shown in the material reference below are for the base silicone with no thinner.
+          Allow additional cure time when high thinner concentrations are used, and verify cure by touch before demoulding.
+        </div>
+      </div>
+    </div>
+
+    <!-- INFO PANEL -->
+    <div class="panel" style="margin-top:1rem">
+      <h2>Material reference</h2>
+      <div id="mat-ref" style="font-size:13px; color: var(--text-sec); line-height:1.8">
+        Select a family to see properties.
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel">
+    <h2>Modulus vs thinner concentration</h2>
+    <div class="chart-legend">
+      <span><span class="swatch" style="background:#2a78d6"></span>Ecoflex 00-10</span>
+      <span><span class="swatch" style="background:#1baf7a"></span>Ecoflex 00-30</span>
+      <span><span class="swatch" style="background:#eda100"></span>Ecoflex 00-50</span>
+      <span><span class="swatch-dot" style="border-color:#2a78d6;background:transparent"></span>Measured ± SD</span>
+      <span><span class="swatch" style="background:#e24b4a; height:2px; border-top: 2px dashed #e24b4a; background:none; width:16px"></span>Target</span>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="mainChart" role="img" aria-label="Elastic modulus versus thinner concentration for three Ecoflex families with PCHIP interpolation curves and error bars showing standard deviation.">Interactive chart showing modulus vs thinner concentration.</canvas>
+    </div>
+    <p class="info-note" style="margin-top:8px">Error bars show ± 1 SD across 10 repeated compression tests per phantom. Curves are PCHIP interpolants; no extrapolation is performed.</p>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const PHANTOMS = [
+  {label:"EF50_0T",    fam:"EF50", t:0,     E:158.80, sd:3.01},
+  {label:"EF50_12.5T", fam:"EF50", t:12.5,  E:111.86, sd:6.44},
+  {label:"EF50_25T",   fam:"EF50", t:25,    E:86.80,  sd:3.93},
+  {label:"EF50_37.5T", fam:"EF50", t:37.5,  E:72.76,  sd:3.07},
+  {label:"EF50_50T",   fam:"EF50", t:50,    E:59.25,  sd:1.88},
+  {label:"EF30_0T",    fam:"EF30", t:0,     E:103.46, sd:2.32},
+  {label:"EF30_12.5T", fam:"EF30", t:12.5,  E:72.58,  sd:2.64},
+  {label:"EF30_25T",   fam:"EF30", t:25,    E:50.21,  sd:1.50},
+  {label:"EF30_37.5T", fam:"EF30", t:37.5,  E:37.16,  sd:0.72},
+  {label:"EF30_50T",   fam:"EF30", t:50,    E:31.85,  sd:0.62},
+  {label:"EF10_0T",    fam:"EF10", t:0,     E:56.27,  sd:2.12},
+  {label:"EF10_12.5T", fam:"EF10", t:12.5,  E:38.06,  sd:1.28},
+  {label:"EF10_25T",   fam:"EF10", t:25,    E:28.16,  sd:0.79},
+  {label:"EF10_37.5T", fam:"EF10", t:37.5,  E:20.14,  sd:0.83},
+  {label:"EF10_50T",   fam:"EF10", t:50,    E:16.29,  sd:0.40},
+  {label:"EF10_62.5T", fam:"EF10", t:62.5,  E:12.94,  sd:0.52},
+  {label:"EF10_75T",   fam:"EF10", t:75,    E:9.58,   sd:0.12},
+  {label:"EF10_87.5T", fam:"EF10", t:87.5,  E:8.68,   sd:0.26},
+  {label:"EF10_100T",  fam:"EF10", t:100,   E:6.19,   sd:0.77},
+];
+
+// Material properties for mass calculator
+const MAT_PROPS = {
+  EF10: { name:"Ecoflex 00-10", rho: 1.04, rho_t: 0.94, pot: 30, cure: 240 },
+  EF30: { name:"Ecoflex 00-30", rho: 1.07, rho_t: 0.94, pot: 45, cure: 240 },
+  EF50: { name:"Ecoflex 00-50", rho: 1.07, rho_t: 0.94, pot: 18, cure: 180 },
+};
+
+const MAT_INFO = {
+  EF10: { shore:"00-10", visc:"14,000 cps", tensile:"120 psi", elongation:"800%", tear:"22 pli" },
+  EF30: { shore:"00-30", visc:"3,000 cps",  tensile:"200 psi", elongation:"900%", tear:"38 pli" },
+  EF50: { shore:"00-50", visc:"8,000 cps",  tensile:"315 psi", elongation:"980%", tear:"50 pli" },
+};
+
+const FAM_COLOR = { EF10:"#2a78d6", EF30:"#1baf7a", EF50:"#eda100" };
+
+// ─── PCHIP INTERPOLATION ─────────────────────────────────────────────────────
+function pchipSlopes(x, y) {
+  const n = x.length, d = [], m = [];
+  for (let i = 0; i < n-1; i++) d.push((y[i+1]-y[i])/(x[i+1]-x[i]));
+  m.push(d[0]);
+  for (let i = 1; i < n-1; i++) {
+    if (d[i-1]*d[i] <= 0) m.push(0);
+    else {
+      const w1 = 2*(x[i+1]-x[i]) + (x[i]-x[i-1]);
+      const w2 = (x[i+1]-x[i]) + 2*(x[i]-x[i-1]);
+      m.push((w1+w2)/(w1/d[i-1]+w2/d[i]));
+    }
+  }
+  m.push(d[n-2]);
+  return m;
+}
+
+function pchipEval(x, y, m, t) {
+  const n = x.length;
+  if (t <= x[0]) return null;
+  if (t >= x[n-1]) return null;
+  let i = 0;
+  while (i < n-2 && t > x[i+1]) i++;
+  const h = x[i+1]-x[i], s = (t-x[i])/h;
+  return (2*s*s*s - 3*s*s + 1)*y[i] + h*(s*s*s - 2*s*s + s)*m[i]
+       + (-2*s*s*s + 3*s*s)*y[i+1] + h*(s*s*s - s*s)*m[i+1];
+}
+
+function makeCurve(pts, npts=300) {
+  const xs = pts.map(p=>p.t), ys = pts.map(p=>p.E);
+  const ms = pchipSlopes(xs, ys);
+  const tMin = xs[0], tMax = xs[xs.length-1];
+  const out = [];
+  for (let i=0; i<=npts; i++) {
+    const t = tMin + (tMax-tMin)*i/npts;
+    out.push({x:t, y:pchipEval(xs,ys,ms,t)});
+  }
+  return out;
+}
+
+// Invert: find t given E for a family
+function invertFamily(fam, E_target) {
+  const pts = PHANTOMS.filter(p=>p.fam===fam).sort((a,b)=>a.t-b.t);
+  const xs = pts.map(p=>p.t), ys = pts.map(p=>p.E);
+  const ms = pchipSlopes(xs, ys);
+  const tMin = xs[0], tMax = xs[xs.length-1];
+  // Bisection
+  let lo = tMin, hi = tMax;
+  for (let i=0; i<60; i++) {
+    const mid = (lo+hi)/2;
+    const v = pchipEval(xs,ys,ms,mid);
+    if (v === null) break;
+    if (v > E_target) lo = mid; else hi = mid;
+    if (hi-lo < 1e-6) break;
+  }
+  const t_star = (lo+hi)/2;
+  const E_pred = pchipEval(xs,ys,ms,t_star);
+  const nearest = pts.reduce((a,b) => Math.abs(a.E-E_target) < Math.abs(b.E-E_target) ? a : b);
+  return {t_star, E_pred, nearest};
+}
+
+function getFeasible(E_target) {
+  const fams = ["EF10","EF30","EF50"];
+  return fams.filter(fam => {
+    const pts = PHANTOMS.filter(p=>p.fam===fam);
+    const Emin = Math.min(...pts.map(p=>p.E));
+    const Emax = Math.max(...pts.map(p=>p.E));
+    return E_target >= Emin && E_target <= Emax;
+  });
+}
+
+function getBounds(E_target) {
+  const all = PHANTOMS.slice().sort((a,b)=>a.E-b.E);
+  const lower = all.filter(p=>p.E <= E_target).pop() || null;
+  const upper = all.find(p=>p.E >= E_target) || null;
+  return {lower, upper};
+}
+
+// ─── CHART SETUP ─────────────────────────────────────────────────────────────
+const ctx = document.getElementById("mainChart").getContext("2d");
+
+const FAMS = ["EF10","EF30","EF50"];
+const curveData = {};
+FAMS.forEach(fam => {
+  const pts = PHANTOMS.filter(p=>p.fam===fam).sort((a,b)=>a.t-b.t);
+  curveData[fam] = makeCurve(pts);
+});
+
+let targetLineDataset = {
+  label:"Target", type:"line",
+  data:[], borderColor:"#e24b4a",
+  borderWidth:1.5, borderDash:[5,4],
+  pointRadius:0, fill:false
+};
+
+let solutionDataset = {
+  label:"Solution", type:"scatter",
+  data:[], backgroundColor:"#e24b4a",
+  pointRadius:8, pointStyle:"star"
+};
+
+const chart = new Chart(ctx, {
+  type:"line",
+  data:{
+    datasets:[
+      {label:"EF10 curve", data:curveData.EF10, borderColor:"#2a78d6", borderWidth:2, pointRadius:0, fill:false, tension:0},
+      {label:"EF30 curve", data:curveData.EF30, borderColor:"#1baf7a", borderWidth:2, pointRadius:0, fill:false, tension:0},
+      {label:"EF50 curve", data:curveData.EF50, borderColor:"#eda100", borderWidth:2, pointRadius:0, fill:false, tension:0},
+      // EF10 measured
+      {label:"EF10 pts", type:"scatter", data:PHANTOMS.filter(p=>p.fam==="EF10").map(p=>({x:p.t,y:p.E})),
+       backgroundColor:"#2a78d6", pointRadius:5, pointStyle:"circle",
+       errorBars:PHANTOMS.filter(p=>p.fam==="EF10").map(p=>p.sd)},
+      {label:"EF30 pts", type:"scatter", data:PHANTOMS.filter(p=>p.fam==="EF30").map(p=>({x:p.t,y:p.E})),
+       backgroundColor:"#1baf7a", pointRadius:5, pointStyle:"circle",
+       errorBars:PHANTOMS.filter(p=>p.fam==="EF30").map(p=>p.sd)},
+      {label:"EF50 pts", type:"scatter", data:PHANTOMS.filter(p=>p.fam==="EF50").map(p=>({x:p.t,y:p.E})),
+       backgroundColor:"#eda100", pointRadius:5, pointStyle:"circle",
+       errorBars:PHANTOMS.filter(p=>p.fam==="EF50").map(p=>p.sd)},
+      targetLineDataset,
+      solutionDataset
+    ]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:false,
+    animation:{duration:200},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        callbacks:{
+          label(ctx){
+            if(ctx.dataset.label.includes("pts"))
+              return ` E = ${ctx.parsed.y.toFixed(2)} kPa`;
+            if(ctx.dataset.label==="Target")
+              return ` Target: ${ctx.parsed.y.toFixed(2)} kPa`;
+            if(ctx.dataset.label==="Solution")
+              return ` Solution: ${ctx.parsed.y.toFixed(2)} kPa`;
+            return ` ${ctx.parsed.y.toFixed(2)} kPa`;
+          }
+        }
+      }
+    },
+    scales:{
+      x:{
+        type:"linear", title:{display:true, text:"Thinner concentration (%)", color:"#898781", font:{size:12}},
+        grid:{color:"rgba(128,128,128,0.10)"},
+        ticks:{color:"#898781", font:{size:11}}
+      },
+      y:{
+        title:{display:true, text:"Elastic modulus (kPa)", color:"#898781", font:{size:12}},
+        grid:{color:"rgba(128,128,128,0.10)"},
+        ticks:{color:"#898781", font:{size:11}}
+      }
+    }
+  }
+});
+
+// Draw manual error bars via afterDraw plugin
+Chart.register({
+  id:"errorbars",
+  afterDraw(chart){
+    const ds = chart.data.datasets;
+    const ctx2 = chart.ctx;
+    [3,4,5].forEach((di,fi) => {
+      const fam = ["EF10","EF30","EF50"][fi];
+      const pts = PHANTOMS.filter(p=>p.fam===fam).sort((a,b)=>a.t-b.t);
+      const meta = chart.getDatasetMeta(di);
+      ctx2.save();
+      ctx2.strokeStyle = FAM_COLOR[fam];
+      ctx2.lineWidth = 1.2;
+      meta.data.forEach((el,i) => {
+        const sd = pts[i].sd;
+        const xPx = el.x;
+        const yTopPx = chart.scales.y.getPixelForValue(pts[i].E + sd);
+        const yBotPx = chart.scales.y.getPixelForValue(pts[i].E - sd);
+        ctx2.beginPath(); ctx2.moveTo(xPx,yTopPx); ctx2.lineTo(xPx,yBotPx); ctx2.stroke();
+        ctx2.beginPath(); ctx2.moveTo(xPx-4,yTopPx); ctx2.lineTo(xPx+4,yTopPx); ctx2.stroke();
+        ctx2.beginPath(); ctx2.moveTo(xPx-4,yBotPx); ctx2.lineTo(xPx+4,yBotPx); ctx2.stroke();
+      });
+      ctx2.restore();
+    }
+    );
+  }
+});
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let chosenFam = null;
+
+function updateTargetLine(E) {
+  // Compute x range across all phantoms
+  const allT = PHANTOMS.map(p=>p.t);
+  const tMin = Math.min(...allT), tMax = Math.max(...allT);
+  targetLineDataset.data = [{x:tMin,y:E},{x:tMax,y:E}];
+  chart.update();
+}
+
+function clearTargetLine() {
+  targetLineDataset.data = [];
+  solutionDataset.data = [];
+  chart.update();
+}
+
+function updateSolution(t, E) {
+  solutionDataset.data = [{x:t,y:E}];
+  chart.update();
+}
+
+// ─── MASS CALCULATOR ─────────────────────────────────────────────────────────
+function calcMasses(fam, t_pct, vol_mm3) {
+  const mat = MAT_PROPS[fam];
+  const vol_mL = (vol_mm3 / 1000) * 1.10;  // convert mm³ to mL, then add 10% overpour
+  const frac_thin = (t_pct/100) / (1 + t_pct/100);
+  const frac_sil  = 1 - frac_thin;
+  const rho_eff = 1 / (frac_sil/mat.rho + frac_thin/mat.rho_t);
+  const total_mass = vol_mL * rho_eff;
+  const m_sil = total_mass * frac_sil;
+  const m_A = m_sil / 2;
+  const m_B = m_sil / 2;
+  const m_thin = total_mass * frac_thin;
+  return {total_mass, m_A, m_B, m_thin, rho_eff};
+}
+
+function renderRecipe(fam, t_pct, vol_mm3) {
+  const {total_mass, m_A, m_B, m_thin} = calcMasses(fam, t_pct, vol_mm3);
+  const matName = MAT_PROPS[fam].name;
+  const recipeArea = document.getElementById("recipe-area");
+  recipeArea.innerHTML = `
+    <div class="recipe-box">
+      <div class="recipe-title">Mixing recipe for ${vol_mm3.toLocaleString()} mm³ mould <span style="font-weight:400;opacity:0.75">(+10% overpour included)</span></div>
+      <div class="recipe-row">
+        <span class="comp">${matName} — Part A</span>
+        <span class="mass">${m_A.toFixed(2)} g</span>
+      </div>
+      <div class="recipe-row">
+        <span class="comp">${matName} — Part B</span>
+        <span class="mass">${m_B.toFixed(2)} g</span>
+      </div>
+      ${m_thin > 0.001 ? `<div class="recipe-row">
+        <span class="comp">Silicone Thinner</span>
+        <span class="mass">${m_thin.toFixed(2)} g</span>
+      </div>` : ""}
+      <div class="total-row">
+        <span>Total mix mass</span>
+        <span>${total_mass.toFixed(2)} g</span>
+      </div>
+    </div>
+    <p class="info-note" style="margin-top:6px">
+      Masses above include a 10% overpour (nominal volume × 1.10) to account for mould fill losses and material retained in the mixing vessel. Weigh thinner and pre-mix with Part A before adding Part B.
+    </p>
+  `;
+}
+
+function renderMatRef(fam) {
+  const p = MAT_PROPS[fam];
+  const i = MAT_INFO[fam];
+  const potCol = p.pot <= 20 ? "var(--danger-text)" : p.pot <= 35 ? "var(--warn-text)" : "var(--success-text)";
+  document.getElementById("mat-ref").innerHTML = `
+    <strong style="color:var(--text)">${p.name}</strong><br>
+    <table style="width:100%;margin-top:6px;border-collapse:collapse">
+      ${[
+        ["Shore hardness", i.shore],
+        ["Mixed viscosity", i.visc],
+        ["Pot life", `<span style="color:${potCol};font-weight:500">${p.pot} min</span>`],
+        ["Cure time", `${p.cure/60} hr`],
+        ["Specific gravity", `${p.rho} g/cc`],
+        ["Tensile strength", i.tensile],
+        ["Elongation", i.elongation],
+        ["Tear strength (Die B)", i.tear],
+      ].map(([k,v]) => `<tr>
+        <td style="padding:3px 0;color:var(--text-muted);font-size:12px">${k}</td>
+        <td style="padding:3px 0;text-align:right;color:var(--text-sec);font-size:12px">${v}</td>
+      </tr>`).join("")}
+    </table>
+    <p class="info-note" style="margin-top:8px">Pot life shown in red/amber is short — prepare mould before mixing.</p>
+  `;
+}
+
+// ─── MAIN UPDATE FUNCTION ────────────────────────────────────────────────────
+function update() {
+  const E_target = parseFloat(document.getElementById("e-target").value);
+  if (isNaN(E_target) || E_target <= 0) { clearTargetLine(); return; }
+
+  const feasible = getFeasible(E_target);
+  const statusArea = document.getElementById("status-area");
+  const famSection = document.getElementById("family-section");
+  const volSection = document.getElementById("vol-section");
+
+  updateTargetLine(E_target);
+
+  if (feasible.length === 0) {
+    // Out of range
+    chosenFam = null;
+    famSection.classList.add("hidden");
+    volSection.style.display = "none";
+    solutionDataset.data = [];
+    chart.update();
+
+    const {lower, upper} = getBounds(E_target);
+    let html = `<div class="status-badge badge-err">Out of validated range</div>`;
+    html += `<div class="bounds-list">`;
+    if (lower) html += `<div class="bound-item"><div class="bi-label">Lower bound</div><div class="bi-phantom">${lower.label} &nbsp;|&nbsp; ${lower.fam} &nbsp;|&nbsp; ${lower.t}% thinner &nbsp;|&nbsp; E = ${lower.E.toFixed(2)} ± ${lower.sd.toFixed(2)} kPa</div></div>`;
+    else html += `<div class="bound-item"><div class="bi-label">Lower bound</div><div class="bi-phantom" style="color:var(--text-muted)">None — target is below minimum (6.19 kPa)</div></div>`;
+    if (upper) html += `<div class="bound-item"><div class="bi-label">Upper bound</div><div class="bi-phantom">${upper.label} &nbsp;|&nbsp; ${upper.fam} &nbsp;|&nbsp; ${upper.t}% thinner &nbsp;|&nbsp; E = ${upper.E.toFixed(2)} ± ${upper.sd.toFixed(2)} kPa</div></div>`;
+    else html += `<div class="bound-item"><div class="bi-label">Upper bound</div><div class="bi-phantom" style="color:var(--text-muted)">None — target is above maximum (158.80 kPa)</div></div>`;
+    html += `</div>`;
+    statusArea.innerHTML = html;
+    document.getElementById("mat-ref").innerHTML = "No family covers this target. See nearest bounds.";
+    return;
+  }
+
+  // Feasible — ensure chosen family is valid
+  if (!chosenFam || !feasible.includes(chosenFam)) chosenFam = feasible[0];
+
+  // Render family selector if overlap
+  if (feasible.length > 1) {
+    famSection.classList.remove("hidden");
+    const sel = document.getElementById("fam-selector");
+    sel.innerHTML = feasible.map(fam => {
+      const cls = fam === chosenFam ? `fam-btn active-${fam.toLowerCase()}` : "fam-btn";
+      return `<button class="${cls}" onclick="chooseFam('${fam}')">${fam.replace("EF","EF ")}</button>`;
+    }).join("");
+  } else {
+    famSection.classList.add("hidden");
+  }
+
+  // Invert
+  const {t_star, E_pred, nearest} = invertFamily(chosenFam, E_target);
+  updateSolution(t_star, E_pred);
+  renderMatRef(chosenFam);
+
+  // Status
+  const badge = `<div class="status-badge badge-ok">Within validated range &mdash; ${chosenFam.replace("EF","EF ")}</div>`;
+  const grid = `
+    <div class="result-grid">
+      <div class="metric">
+        <div class="label">Thinner</div>
+        <div class="value">${t_star.toFixed(2)}<span class="unit">%</span></div>
+      </div>
+      <div class="metric">
+        <div class="label">Predicted E</div>
+        <div class="value">${E_pred.toFixed(2)}<span class="unit">kPa</span></div>
+      </div>
+      <div class="metric span2">
+        <div class="label">Nearest measured phantom</div>
+        <div class="value" style="font-size:14px">${nearest.label} &nbsp; ${nearest.E.toFixed(2)} ± ${nearest.sd.toFixed(2)} kPa</div>
+      </div>
+    </div>`;
+  statusArea.innerHTML = badge + grid;
+
+  // Show volume section
+  volSection.style.display = "block";
+
+  // Trigger volume update
+  updateVolume(t_star);
+}
+
+function updateVolume(t_star_override) {
+  const volInput = document.getElementById("vol-input");
+  const vol = parseFloat(volInput.value);
+  if (isNaN(vol) || vol < 1 || !chosenFam) return;
+
+  // Get t_star from last inversion
+  const E_target = parseFloat(document.getElementById("e-target").value);
+  const feasible = getFeasible(E_target);
+  if (!feasible.includes(chosenFam)) return;
+  const {t_star} = invertFamily(chosenFam, E_target);
+
+  renderRecipe(chosenFam, t_star, vol);  // vol is in mm³
+}
+
+function chooseFam(fam) {
+  chosenFam = fam;
+  update();
+}
+
+// Wire up inputs
+document.getElementById("e-target").addEventListener("input", update);
+document.getElementById("vol-input").addEventListener("input", () => updateVolume());
+
+// Initial render
+update();
+</script>
+</body>
+</html>
