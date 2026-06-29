@@ -431,7 +431,13 @@
         <span><span class="swatch" style="background:#eda100"></span>EF 00-50</span>
         <span><span class="swatch-dot" style="border-color:#2a78d6"></span>Measured ± SD</span>
         <span><span class="swatch-dash"></span>Target</span>
-        <span><span style="font-size:14px;line-height:1">★</span>Solution</span>
+        <span>
+          <svg width="14" height="14" viewBox="0 0 14 14" style="vertical-align:middle">
+            <polygon points="7,1 8.5,5.5 13,5.5 9.5,8.5 11,13 7,10 3,13 4.5,8.5 1,5.5 5.5,5.5"
+              fill="#e24b4a" stroke="#e24b4a" stroke-width="0.5" stroke-linejoin="round"/>
+          </svg>
+          Solution
+        </span>
       </div>
       <div class="chart-wrap">
         <canvas id="mainChart"></canvas>
@@ -591,7 +597,7 @@ const curveData = {};
 });
 
 const targetDS  = { label:"Target",   type:"line",    data:[], borderColor:"#e24b4a", borderWidth:1.5, borderDash:[5,4], pointRadius:0, fill:false };
-const solutionDS = { label:"Solution", type:"scatter", data:[], backgroundColor:"#e24b4a", pointRadius:9, pointStyle:"star" };
+const solutionDS = { label:"Solution", type:"scatter", data:[], backgroundColor:"#e24b4a", pointRadius:0, pointStyle:"circle", pointHoverRadius:0 };
 
 const chart = new Chart(document.getElementById("mainChart").getContext("2d"), {
   type:"line",
@@ -611,10 +617,10 @@ const chart = new Chart(document.getElementById("mainChart").getContext("2d"), {
       callbacks:{ label(c){ return ` ${c.parsed.y.toFixed(2)} kPa`; } }
     }},
     scales:{
-      x:{ type:"linear", title:{display:true, text:"Thinner concentration (%)", color:"#898781", font:{size:11}},
-          grid:{color:"rgba(0,0,0,0.07)"}, ticks:{color:"#898781", font:{size:10}} },
-      y:{ title:{display:true, text:"Elastic modulus (kPa)", color:"#898781", font:{size:11}},
-          grid:{color:"rgba(0,0,0,0.07)"}, ticks:{color:"#898781", font:{size:10}} }
+      x:{ type:"linear", title:{display:true, text:"Thinner concentration (%)", color:"#7a7975", font:{size:11}},
+          grid:{color:"rgba(255,255,255,0.07)"}, ticks:{color:"#7a7975", font:{size:10}} },
+      y:{ title:{display:true, text:"Elastic modulus (kPa)", color:"#7a7975", font:{size:11}},
+          grid:{color:"rgba(255,255,255,0.07)"}, ticks:{color:"#7a7975", font:{size:10}} }
     }
   }
 });
@@ -777,12 +783,60 @@ function chooseFam(fam) { chosenFam = fam; update(); }
 // Keep chart sized correctly if window resizes
 new ResizeObserver(() => { chart.resize(); }).observe(document.querySelector('.chart-wrap'));
 
+// Custom star drawer for solution point
+function drawStar(ctx, cx, cy, r, color) {
+  const spikes = 5, outerR = r, innerR = r * 0.42;
+  let rot = (Math.PI / 2) * 3;
+  const step = Math.PI / spikes;
+  ctx.save();
+  ctx.beginPath();
+  ctx.moveTo(cx, cy - outerR);
+  for (let i = 0; i < spikes; i++) {
+    ctx.lineTo(
+      cx + Math.cos(rot) * outerR,
+      cy + Math.sin(rot) * outerR
+    );
+    rot += step;
+    ctx.lineTo(
+      cx + Math.cos(rot) * innerR,
+      cy + Math.sin(rot) * innerR
+    );
+    rot += step;
+  }
+  ctx.lineTo(cx, cy - outerR);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1;
+  ctx.lineJoin = "round";
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+Chart.register({
+  id: "solutionstar",
+  afterDraw(ch) {
+    const ds = ch.getDatasetMeta(7); // solutionDS index
+    if (!ds || !ds.data || ds.data.length === 0) return;
+    const pt = ds.data[0];
+    if (pt && pt.x != null && pt.y != null && !isNaN(pt.x) && !isNaN(pt.y)) {
+      drawStar(ch.ctx, pt.x, pt.y, 11, "#e24b4a");
+    }
+  }
+});
+
 document.getElementById("e-target").addEventListener("input", update);
 document.getElementById("vol-input").addEventListener("input", updateVolume);
 
-// Force chart to measure its container after layout is complete
+// Force chart to measure its container and sync theme after layout is complete
 window.addEventListener('load', () => {
-  setTimeout(() => { chart.resize(); update(); }, 50);
+  setTimeout(() => {
+    const t = document.documentElement.getAttribute('data-theme') || 'dark';
+    setTheme(t);
+    chart.resize();
+    update();
+  }, 50);
 });
 </script>
 </body>
