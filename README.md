@@ -20,11 +20,13 @@ The resulting dataset provides validated hyperelastic material model parameters,
 ## Web Applications
 
 Two browser-based tools are hosted on GitHub Pages and require no installation:
-Inverse Design Tool — Enter a target elastic modulus and receive a validated phantom fabrication recipe with component masses calculated for your mould volume.
 
+Inverse Design Tool:
+Enter a target elastic modulus and receive a validated phantom fabrication recipe with component masses calculated for your mould volume.
 Available at: https://abubakardawood.github.io/tissue-phantom-material-database/inverse-design.html
-Organ Browser — Select a tissue from an anatomical diagram to view its literature stiffness range, matching phantoms, and hyperelastic model parameters (engineering and true stress).
 
+Organ Browser:
+Select a tissue from an anatomical diagram to view its literature stiffness range, matching phantoms, and hyperelastic model parameters (for engineering and true data).
 Available at: https://abubakardawood.github.io/tissue-phantom-material-database/organ-browser.html
 
 **Deploy via Streamlit Community Cloud:**
