@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tissue Phantom Material Database</title>
+<style>
+  :root {
+    --bg: #f4f3f0;
+    --surface: #ffffff;
+    --surface2: #eeede9;
+    --border: rgba(0,0,0,0.09);
+    --border-strong: rgba(0,0,0,0.16);
+    --text: #0b0b0b;
+    --text-sec: #52514e;
+    --text-muted: #898781;
+    --accent: #185fa5;
+    --accent-bg: #e6f1fb;
+    --accent-text: #0c447c;
+    --radius: 10px;
+  }
+  [data-theme="dark"] {
+    --bg: #111110;
+    --surface: #1e1e1c;
+    --surface2: #2a2a28;
+    --border: rgba(255,255,255,0.09);
+    --border-strong: rgba(255,255,255,0.16);
+    --text: #f5f4f0;
+    --text-sec: #c3c2b7;
+    --text-muted: #7a7975;
+    --accent: #3987e5;
+    --accent-bg: #042c53;
+    --accent-text: #85b7eb;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border-strong);
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    justify-content: center;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+  }
+  .site-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+  .site-title span { color: var(--text-muted); font-weight: 400; }
+
+  .theme-toggle {
+    display: flex; gap: 4px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 20px; padding: 3px;
+  }
+  .theme-btn {
+    padding: 4px 12px; border-radius: 16px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 12px; cursor: pointer; transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .theme-btn.active {
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+  }
+
+  /* ── MAIN ── */
+  main {
+    display: flex;
+    justify-content: center;
+    padding: 3rem 1.5rem 4rem;
+  }
+  .content { width: 100%; max-width: 900px; }
+
+  /* ── HERO ── */
+  .hero { margin-bottom: 2.5rem; }
+  .hero-label {
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--accent); margin-bottom: 0.75rem;
+  }
+  .hero h1 {
+    font-size: 28px; font-weight: 500;
+    letter-spacing: -0.02em; line-height: 1.25;
+    color: var(--text); margin-bottom: 0.75rem;
+  }
+  .hero p {
+    font-size: 15px; color: var(--text-sec);
+    max-width: 640px; line-height: 1.7;
+  }
+
+  /* ── STATS ROW ── */
+  .stats {
+    display: flex; gap: 1px;
+    background: var(--border-strong);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 2.5rem;
+  }
+  .stat {
+    flex: 1; background: var(--surface);
+    padding: 1rem 1.25rem;
+  }
+  .stat-value {
+    font-size: 22px; font-weight: 500;
+    letter-spacing: -0.02em; color: var(--text);
+    margin-bottom: 2px;
+  }
+  .stat-label { font-size: 12px; color: var(--text-muted); }
+
+  /* ── APPS ── */
+  .section-label {
+    font-size: 11px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted); margin-bottom: 1rem;
+  }
+  .apps { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2.5rem; }
+  @media (max-width: 600px) { .apps { grid-template-columns: 1fr; } }
+
+  .app-card {
+    display: block;
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-decoration: none;
+    transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
+    cursor: pointer;
+  }
+  .app-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    transform: translateY(-1px);
+  }
+  .app-icon {
+    font-size: 28px; margin-bottom: 1rem;
+    display: block;
+  }
+  .app-name {
+    font-size: 16px; font-weight: 500;
+    color: var(--text); margin-bottom: 0.4rem;
+    letter-spacing: -0.01em;
+  }
+  .app-desc {
+    font-size: 13px; color: var(--text-sec);
+    line-height: 1.6; margin-bottom: 1rem;
+  }
+  .app-link {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500;
+    color: var(--accent);
+  }
+  .app-link::after { content: '→'; }
+
+  /* ── ABOUT ── */
+  .about {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .about p {
+    font-size: 13px; color: var(--text-sec);
+    line-height: 1.75; margin-bottom: 0.75rem;
+  }
+  .about p:last-child { margin-bottom: 0; }
+
+  /* ── CITATION ── */
+  .citation {
+    background: var(--surface2);
+    border: 0.5px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2.5rem;
+  }
+  .citation-label {
+    font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted); margin-bottom: 0.5rem;
+  }
+  .citation p {
+    font-size: 12px; color: var(--text-sec);
+    line-height: 1.7; font-style: italic;
+  }
+
+  /* ── LICENCE ROW ── */
+  .licences {
+    display: flex; gap: 0.75rem; flex-wrap: wrap;
+    margin-bottom: 2rem;
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--text-muted);
+    background: var(--surface);
+    border: 0.5px solid var(--border-strong);
+    border-radius: 20px; padding: 4px 10px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 0.5px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    display: flex; justify-content: center;
+  }
+  .footer-inner {
+    width: 100%; max-width: 900px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 0.5rem;
+  }
+  .footer-inner p { font-size: 12px; color: var(--text-muted); }
+  .footer-inner a { color: var(--accent); text-decoration: none; }
+  .footer-inner a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="site-title">Tissue Phantom Material Database <span>/ QMUL</span></div>
+    <div class="theme-toggle">
+      <button class="theme-btn active" id="btn-light" onclick="setTheme('light')">☀ Light</button>
+      <button class="theme-btn" id="btn-dark" onclick="setTheme('dark')">☾ Dark</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="content">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-label">Open-access dataset</div>
+      <h1>Silicone Tissue Phantom<br>Material Database</h1>
+      <p>Compression-derived mechanical characterisation of 19 silicone phantoms spanning 6.19–158.80 kPa, with hyperelastic model parameters, model selection guidance, and browser-based design tools.</p>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">19</div>
+        <div class="stat-label">Phantom formulations</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Ecoflex families</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">Hyperelastic models</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">11</div>
+        <div class="stat-label">Organs mapped</div>
+      </div>
+    </div>
+
+    <!-- APPS -->
+    <div class="section-label">Web applications</div>
+    <div class="apps">
+
+      <a class="app-card" href="inverse-design.html">
+        <span class="app-icon">🔬</span>
+        <div class="app-name">Inverse Design Tool</div>
+        <div class="app-desc">Enter a target Young's modulus and receive a validated Ecoflex fabrication recipe with component masses for your mould volume.</div>
+        <div class="app-link">Open tool</div>
+      </a>
+
+      <a class="app-card" href="organ-browser.html">
+        <span class="app-icon">🫀</span>
+        <div class="app-name">Organ Browser</div>
+        <div class="app-desc">Select a tissue from an anatomical diagram to view its literature stiffness range, matching phantoms, and hyperelastic model parameters.</div>
+        <div class="app-link">Open tool</div>
+      </a>
+
+    </div>
+
+    <!-- ABOUT -->
+    <div class="section-label">About</div>
+    <div class="about">
+      <p>This database provides open-access mechanical characterisation data for soft silicone tissue phantoms fabricated from Ecoflex 00-10, 00-30, and 00-50 with systematically varied Silicone Thinner concentrations. The phantom elastic modulus range of 6.19–158.80 kPa encompasses the stiffness of a wide variety of healthy and pathological human soft tissues.</p>
+      <p>Each phantom was characterised through ten repeated uniaxial compression tests. Engineering and true stress–strain responses were used to fit six hyperelastic material models: Neo-Hookean, Mooney-Rivlin, Yeoh, Ogden, Veronda-Westmann, and Humphrey. Model selection is guided by the Akaike Information Criterion (AIC) and standard error (S).</p>
+      <p>The dataset supports reproducible biomechanical simulation, surgical training system development, and medical device evaluation where tissue-mimicking materials are required.</p>
+    </div>
+
+    <!-- CITATION -->
+    <div class="section-label">Citation</div>
+    <div class="citation">
+      <div class="citation-label">If you use this dataset or tools, please cite</div>
+      <p>Dawood, A.B., Zhang, Z., Suulker, C., Osman, D., Abdulali, A., Angelmahr, M., Althoefer, K. (2026). Hyperelastic Characterisation of Silicone Tissue Phantoms: A Parametric Database with Model Selection and Inverse Design Framework.</p>
+    </div>
+
+    <!-- LICENCES -->
+    <div class="section-label">Licences</div>
+    <div class="licences">
+      <div class="badge">⚖ Code — MIT License</div>
+      <div class="badge">📊 Data — CC BY 4.0</div>
+    </div>
+
+    <!-- FUNDING -->
+    <div class="section-label">Acknowledgements</div>
+    <div class="about">
+      <p>This work was carried out under the PALPABLE project, funded by UK Research and Innovation (UKRI) through the UK government's Horizon Europe funding guarantee (grant N°101092518) and funded by the European Union. This work is also supported by ERC grant EndoTheranostics (101118626), funded by the European Union.</p>
+    </div>
+
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <p>Queen Mary University of London &mdash; <a href="https://github.com/abubakardawood/tissue-phantom-material-database" target="_blank">GitHub Repository</a></p>
+    <p><a href="mailto:a.dawood@qmul.ac.uk">a.dawood@qmul.ac.uk</a></p>
+  </div>
+</footer>
+
+<script>
+function setTheme(t) {
+  document.documentElement.setAttribute('data-theme', t);
+  document.getElementById('btn-light').classList.toggle('active', t === 'light');
+  document.getElementById('btn-dark').classList.toggle('active',  t === 'dark');
+}
+if (window.matchMedia('(prefers-color-scheme: dark)').matches) setTheme('dark');
+</script>
+</body>
+</html>
