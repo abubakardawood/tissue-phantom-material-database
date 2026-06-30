@@ -370,7 +370,7 @@
     <!-- LEFT: body diagram -->
     <div class="left-col">
       <div class="left-label">Select an organ</div>
-      <svg class="body-svg" viewBox="0 0 200 500" xmlns="http://www.w3.org/2000/svg">
+      <svg class="body-svg" viewBox="0 0 200 420" xmlns="http://www.w3.org/2000/svg">
         <!-- Body outline -->
         <ellipse cx="100" cy="38" rx="30" ry="34" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
         <rect x="88" y="68" width="24" height="16" rx="4" fill="rgba(128,128,128,0.06)" stroke="var(--border-strong)" stroke-width="0.8"/>
@@ -393,86 +393,86 @@
 
         <!-- Lungs -->
         <g class="organ-btn" id="btn-lung" data-organ="lung">
-          <rect class="hit" x="56" y="130" width="28" height="44" rx="5" fill="#A8D4E8"/>
-          <path d="M60 134 Q58 134 58 148 Q58 166 63 171 Q68 175 76 173 Q82 170 82 158 Q82 146 79 139 Q76 132 68 132 Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="0.8"/>
-          <rect class="hit" x="136" y="130" width="28" height="44" rx="5" fill="#A8D4E8"/>
-          <path d="M140 132 Q132 132 129 139 Q126 146 126 158 Q126 170 132 173 Q140 175 145 171 Q150 166 150 148 Q150 134 148 134 Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="0.8"/>
-          <text x="100" y="184" text-anchor="middle" font-size="7" fill="var(--text-muted)">Lungs</text>
+          <rect class="hit" x="56" y="170" width="28" height="40" rx="5" fill="#A8D4E8"/>
+          <path d="M60 174 Q58 174 58 188 Q58 206 63 210 Q68 213 76 211 Q82 208 82 196 Q82 184 79 178 Q76 172 68 172 Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="0.8"/>
+          <rect class="hit" x="136" y="170" width="28" height="40" rx="5" fill="#A8D4E8"/>
+          <path d="M140 172 Q132 172 129 178 Q126 184 126 196 Q126 208 132 211 Q140 213 145 210 Q150 206 150 188 Q150 174 148 174 Z" fill="#A8D4E8" stroke="#2E86B0" stroke-width="0.8"/>
+          <text x="100" y="218" text-anchor="middle" font-size="7" fill="var(--text-muted)">Lungs</text>
         </g>
 
         <!-- Breast -->
         <g class="organ-btn" id="btn-breast" data-organ="breast">
-          <rect class="hit" x="52" y="110" width="30" height="26" rx="5" fill="#F9C8D8"/>
-          <ellipse cx="67" cy="123" rx="13" ry="10" fill="#F9C8D8" stroke="#D4537E" stroke-width="0.8"/>
-          <circle cx="67" cy="125" r="2.5" fill="#D4537E" opacity="0.7"/>
-          <rect class="hit" x="118" y="110" width="30" height="26" rx="5" fill="#F9C8D8"/>
-          <ellipse cx="133" cy="123" rx="13" ry="10" fill="#F9C8D8" stroke="#D4537E" stroke-width="0.8"/>
-          <circle cx="133" cy="125" r="2.5" fill="#D4537E" opacity="0.7"/>
-          <text x="100" y="144" text-anchor="middle" font-size="7" fill="var(--text-muted)">Breast</text>
+          <rect class="hit" x="52" y="84" width="30" height="26" rx="5" fill="#F9C8D8"/>
+          <ellipse cx="67" cy="97" rx="13" ry="10" fill="#F9C8D8" stroke="#D4537E" stroke-width="0.8"/>
+          <circle cx="67" cy="99" r="2.5" fill="#D4537E" opacity="0.7"/>
+          <rect class="hit" x="118" y="84" width="30" height="26" rx="5" fill="#F9C8D8"/>
+          <ellipse cx="133" cy="97" rx="13" ry="10" fill="#F9C8D8" stroke="#D4537E" stroke-width="0.8"/>
+          <circle cx="133" cy="99" r="2.5" fill="#D4537E" opacity="0.7"/>
+          <text x="100" y="116" text-anchor="middle" font-size="7" fill="var(--text-muted)">Breast</text>
         </g>
 
         <!-- Heart -->
         <g class="organ-btn" id="btn-heart" data-organ="heart">
-          <rect class="hit" x="81" y="99" width="38" height="38" rx="6" fill="#F4C0D1"/>
-          <path d="M100 133 Q87 123 87 113 Q87 105 93 104 Q98 102 100 107 Q102 102 108 104 Q114 105 114 113 Q114 123 100 133Z" fill="#F4C0D1" stroke="#D4537E" stroke-width="0.8"/>
-          <text x="100" y="145" text-anchor="middle" font-size="7" fill="var(--text-muted)">Heart</text>
+          <rect class="hit" x="81" y="120" width="38" height="38" rx="6" fill="#F4C0D1"/>
+          <path d="M100 154 Q87 144 87 134 Q87 126 93 125 Q98 123 100 128 Q102 123 108 125 Q114 126 114 134 Q114 144 100 154Z" fill="#F4C0D1" stroke="#D4537E" stroke-width="0.8"/>
+          <text x="100" y="166" text-anchor="middle" font-size="7" fill="var(--text-muted)">Heart</text>
         </g>
 
         <!-- Liver -->
         <g class="organ-btn" id="btn-liver" data-organ="liver">
-          <rect class="hit" x="48" y="159" width="56" height="30" rx="6" fill="#B5D4F4"/>
-          <path d="M52 185 Q52 169 66 167 Q78 165 86 170 Q94 173 98 168 Q106 165 102 179 Q100 189 84 191 Q70 193 60 187Z" fill="#B5D4F4" stroke="#378ADD" stroke-width="0.8"/>
-          <text x="72" y="199" text-anchor="middle" font-size="7" fill="var(--text-muted)">Liver</text>
+          <rect class="hit" x="48" y="222" width="56" height="28" rx="6" fill="#B5D4F4"/>
+          <path d="M52 248 Q52 232 66 230 Q78 228 86 233 Q94 236 98 231 Q106 228 102 242 Q100 252 84 254 Q70 256 60 250Z" fill="#B5D4F4" stroke="#378ADD" stroke-width="0.8"/>
+          <text x="72" y="262" text-anchor="middle" font-size="7" fill="var(--text-muted)">Liver</text>
         </g>
 
         <!-- Stomach -->
         <g class="organ-btn" id="btn-stomach" data-organ="stomach">
-          <rect class="hit" x="114" y="162" width="34" height="34" rx="6" fill="#FAC775"/>
-          <path d="M122 166 Q116 166 116 178 Q116 190 124 192 Q134 194 138 186 Q140 180 138 173 Q136 165 130 165Z" fill="#FAC775" stroke="#BA7517" stroke-width="0.8"/>
-          <text x="134" y="202" text-anchor="middle" font-size="7" fill="var(--text-muted)">Stomach</text>
+          <rect class="hit" x="114" y="222" width="34" height="32" rx="6" fill="#FAC775"/>
+          <path d="M122 226 Q116 226 116 238 Q116 250 124 252 Q134 254 138 246 Q140 240 138 233 Q136 225 130 225Z" fill="#FAC775" stroke="#BA7517" stroke-width="0.8"/>
+          <text x="134" y="262" text-anchor="middle" font-size="7" fill="var(--text-muted)">Stomach</text>
         </g>
 
         <!-- Pancreas -->
         <g class="organ-btn" id="btn-pancreas" data-organ="pancreas">
-          <rect class="hit" x="60" y="196" width="48" height="22" rx="5" fill="#E8C4F5"/>
-          <path d="M64 200 Q62 200 62 208 Q62 214 68 216 Q80 218 94 214 Q102 212 104 208 Q104 202 98 200 Q86 198 74 200 Z" fill="#E8C4F5" stroke="#A855C8" stroke-width="0.8"/>
-          <text x="83" y="226" text-anchor="middle" font-size="7" fill="var(--text-muted)">Pancreas</text>
+          <rect class="hit" x="60" y="266" width="48" height="20" rx="5" fill="#E8C4F5"/>
+          <path d="M64 270 Q62 270 62 276 Q62 282 68 284 Q80 286 94 282 Q102 280 104 276 Q104 270 98 268 Q86 266 74 268 Z" fill="#E8C4F5" stroke="#A855C8" stroke-width="0.8"/>
+          <text x="83" y="294" text-anchor="middle" font-size="7" fill="var(--text-muted)">Pancreas</text>
         </g>
 
         <!-- Kidney -->
         <g class="organ-btn" id="btn-kidney" data-organ="kidney">
-          <rect class="hit" x="56" y="200" width="26" height="34" rx="6" fill="#CECBF6"/>
-          <rect class="hit" x="118" y="200" width="26" height="34" rx="6" fill="#CECBF6"/>
-          <path d="M61 205 Q57 205 57 217 Q57 229 61 229 Q69 229 75 223 Q79 217 75 211 Q71 205 61 205Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="0.7"/>
-          <path d="M123 205 Q119 205 119 217 Q119 229 123 229 Q131 229 137 223 Q141 217 137 211 Q133 205 123 205Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="0.7"/>
-          <text x="100" y="234" text-anchor="middle" font-size="7" fill="var(--text-muted)">Kidney</text>
+          <rect class="hit" x="56" y="296" width="26" height="32" rx="6" fill="#CECBF6"/>
+          <rect class="hit" x="118" y="296" width="26" height="32" rx="6" fill="#CECBF6"/>
+          <path d="M61 300 Q57 300 57 312 Q57 324 61 324 Q69 324 75 318 Q79 312 75 306 Q71 300 61 300Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="0.7"/>
+          <path d="M123 300 Q119 300 119 312 Q119 324 123 324 Q131 324 137 318 Q141 312 137 306 Q133 300 123 300Z" fill="#CECBF6" stroke="#7F77DD" stroke-width="0.7"/>
+          <text x="100" y="336" text-anchor="middle" font-size="7" fill="var(--text-muted)">Kidney</text>
         </g>
 
         <!-- Prostate -->
         <g class="organ-btn" id="btn-prostate" data-organ="prostate">
-          <rect class="hit" x="84" y="244" width="32" height="24" rx="6" fill="#F4C0D1"/>
-          <ellipse cx="100" cy="256" rx="13" ry="10" fill="#F4C0D1" stroke="#D4537E" stroke-width="0.8"/>
-          <ellipse cx="100" cy="256" rx="4" ry="6" fill="#FBEAF0" stroke="#D4537E" stroke-width="0.5"/>
-          <text x="100" y="276" text-anchor="middle" font-size="7" fill="var(--text-muted)">Prostate</text>
+          <rect class="hit" x="84" y="344" width="32" height="24" rx="6" fill="#F4C0D1"/>
+          <ellipse cx="100" cy="356" rx="13" ry="10" fill="#F4C0D1" stroke="#D4537E" stroke-width="0.8"/>
+          <ellipse cx="100" cy="356" rx="4" ry="6" fill="#FBEAF0" stroke="#D4537E" stroke-width="0.5"/>
+          <text x="100" y="376" text-anchor="middle" font-size="7" fill="var(--text-muted)">Prostate</text>
         </g>
 
         <!-- Muscle -->
         <g class="organ-btn" id="btn-muscle" data-organ="muscle">
-          <rect class="hit" x="20" y="156" width="24" height="44" rx="6" fill="#C0DD97"/>
-          <ellipse cx="32" cy="178" rx="9" ry="18" fill="#C0DD97" stroke="#639922" stroke-width="0.8"/>
-          <line x1="28" y1="165" x2="28" y2="190" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
-          <line x1="32" y1="162" x2="32" y2="193" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
-          <line x1="36" y1="165" x2="36" y2="190" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
-          <text x="32" y="204" text-anchor="middle" font-size="7" fill="var(--text-muted)">Muscle</text>
+          <rect class="hit" x="20" y="200" width="24" height="44" rx="6" fill="#C0DD97"/>
+          <ellipse cx="32" cy="222" rx="9" ry="18" fill="#C0DD97" stroke="#639922" stroke-width="0.8"/>
+          <line x1="28" y1="208" x2="28" y2="234" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
+          <line x1="32" y1="205" x2="32" y2="237" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
+          <line x1="36" y1="208" x2="36" y2="234" stroke="#3B6D11" stroke-width="0.5" opacity="0.7"/>
+          <text x="32" y="250" text-anchor="middle" font-size="7" fill="var(--text-muted)">Muscle</text>
         </g>
 
         <!-- Adipose -->
         <g class="organ-btn" id="btn-adipose" data-organ="adipose">
-          <rect class="hit" x="138" y="192" width="28" height="36" rx="6" fill="#F5C4B3"/>
-          <circle cx="152" cy="204" r="7" fill="#F5C4B3" stroke="#F0997B" stroke-width="0.6"/>
-          <circle cx="147" cy="216" r="6" fill="#F5C4B3" stroke="#F0997B" stroke-width="0.6"/>
-          <circle cx="158" cy="217" r="5" fill="#FAECE7" stroke="#F0997B" stroke-width="0.6"/>
-          <text x="152" y="236" text-anchor="middle" font-size="7" fill="var(--text-muted)">Fat</text>
+          <rect class="hit" x="138" y="266" width="28" height="36" rx="6" fill="#F5C4B3"/>
+          <circle cx="152" cy="278" r="7" fill="#F5C4B3" stroke="#F0997B" stroke-width="0.6"/>
+          <circle cx="147" cy="290" r="6" fill="#F5C4B3" stroke="#F0997B" stroke-width="0.6"/>
+          <circle cx="158" cy="291" r="5" fill="#FAECE7" stroke="#F0997B" stroke-width="0.6"/>
+          <text x="152" y="310" text-anchor="middle" font-size="7" fill="var(--text-muted)">Fat</text>
         </g>
       </svg>
     </div>
