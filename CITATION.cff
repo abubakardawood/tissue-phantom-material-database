@@ -1,0 +1,73 @@
+cff-version: 1.2.0
+message: "If you use this dataset or software, please cite it as below."
+type: dataset
+title: "Tissue Phantom Material Database: Hyperelastic Characterisation of Silicone Tissue Phantoms"
+version: 1.0.0
+date-released: 2026-06-30
+license:
+  - MIT
+  - CC-BY-4.0
+repository-code: "https://github.com/abubakardawood/tissue-phantom-material-database"
+url: "https://abubakardawood.github.io/tissue-phantom-material-database/"
+abstract: >
+  An open-access database of mechanical characterisation data for nineteen
+  silicone tissue phantoms fabricated from Ecoflex 00-10, 00-30, and 00-50
+  with systematically varied Silicone Thinner concentrations. The database
+  provides raw uniaxial compression stress-strain data, hyperelastic material
+  model parameters (Neo-Hookean, Mooney-Rivlin, Yeoh, Ogden,
+  Veronda-Westmann, Humphrey), model selection metrics (AIC and standard
+  error), and browser-based inverse design and organ-browsing tools.
+keywords:
+  - tissue phantom
+  - silicone
+  - hyperelastic
+  - biomechanics
+  - soft robotics
+  - surgical robotics
+  - Ecoflex
+  - material characterisation
+  - inverse design
+authors:
+  - family-names: Dawood
+    given-names: Abu Bakar
+    orcid: "https://orcid.org/0000-0002-1800-7919"
+    affiliation: "Queen Mary University of London"
+    email: a.dawood@qmul.ac.uk
+  - family-names: Zhang
+    given-names: Z.
+    affiliation: "Queen Mary University of London"
+  - family-names: Osman
+    given-names: D.
+    affiliation: "Queen Mary University of London"
+  - family-names: Suulker
+    given-names: C.
+    affiliation: "Queen Mary University of London"
+  - family-names: Abdulali
+    given-names: A.
+    affiliation: "Queen Mary University of London"
+  - family-names: Angelmahr
+    given-names: M.
+  - family-names: Althoefer
+    given-names: K.
+    affiliation: "Queen Mary University of London"
+preferred-citation:
+  type: article
+  title: >
+    Hyperelastic Characterisation of Silicone Tissue Phantoms: A Parametric
+    Database with Model Selection and Inverse Design Framework
+  authors:
+    - family-names: Dawood
+      given-names: Abu Bakar
+    - family-names: Zhang
+      given-names: Z.
+    - family-names: Osman
+      given-names: D.
+    - family-names: Suulker
+      given-names: C.
+    - family-names: Abdulali
+      given-names: A.
+    - family-names: Angelmahr
+      given-names: M.
+    - family-names: Althoefer
+      given-names: K.
+  year: 2026
