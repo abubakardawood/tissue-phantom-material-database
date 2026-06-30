@@ -19,13 +19,13 @@ The resulting dataset provides validated hyperelastic material model parameters,
 
 ## Web Applications
 
-Two browser-based tools are provided:
+Two browser-based tools are hosted on GitHub Pages and require no installation:
+Inverse Design Tool — Enter a target elastic modulus and receive a validated phantom fabrication recipe with component masses calculated for your mould volume.
 
-**Inverse Design App** — Enter a target elastic modulus and receive a validated phantom fabrication recipe without requiring programming expertise.
-Available at: https://phantom-inverse-design.streamlit.app
+Available at: https://abubakardawood.github.io/tissue-phantom-material-database/inverse-design.html
+Organ Browser — Select a tissue from an anatomical diagram to view its literature stiffness range, matching phantoms, and hyperelastic model parameters (engineering and true stress).
 
-**Organ Browser** — Select a target tissue from an anatomical body diagram and immediately receive the corresponding literature stiffness range, the subset of database phantoms whose properties fall within that range, and the fabrication recipe for each matching phantom.
-Available at: https://phantom-organ-browser.streamlit.app
+Available at: https://abubakardawood.github.io/tissue-phantom-material-database/organ-browser.html
 
 **Deploy via Streamlit Community Cloud:**
 - Repository: this repo
@@ -39,7 +39,7 @@ Available at: https://phantom-organ-browser.streamlit.app
 
 If you use this dataset or code in your work, please cite the associated publication:
 
-> Dawood, A.B., Zhang, Z., Suulker, C., Osman, D., Abdulali, A., Angelmahr, M., Althoefer, K. (2026). Hyperelastic Characterisation of Silicone Tissue Phantoms: A Parametric Database with Model Selection and Inverse Design Framework.
+> Dawood, A.B., Zhang, Z., Osman, D., Suulker, C., Abdulali, A., Angelmahr, M., Althoefer, K. (2026). Hyperelastic Characterisation of Silicone Tissue Phantoms: A Parametric Database with Model Selection and Inverse Design Framework.
 
 A `CITATION.cff` file is also provided for automated citation tools.
 
